@@ -1,6 +1,6 @@
 Class {
 	#name : 'BaselineOfStackCollector',
-	#superclass : 'Object',
+	#superclass : 'BaselineOf',
 	#category : 'BaselineOfStackCollector',
 	#package : 'BaselineOfStackCollector'
 }

@@ -10,6 +10,7 @@ Class {
 
 { #category : 'api' }
 ScriptLauncher >> runPythonProject: aFileReference [
+	"Runs the project, having as entry point aFileRefence, with the python adapter"
 
 	OSPlatform current runCommand: 'python setup.py py ' , aFileReference
 ]

@@ -13,14 +13,13 @@ Class {
 	#package : 'StackCollector'
 }
 
-{ #category : 'as yet unclassified' }
+{ #category : 'initialization' }
 StackCollector class >> collectStackFrom: aDAPClient [
-	
-	| collector |
-	
-	collector := self new clientDAP: aDAPClient.
-	
 
+	| collector |
+	collector := self new clientDap: aDAPClient.
+
+	^ collector getExecutionTraces
 ]
 
 { #category : 'accessing' }
@@ -73,12 +72,11 @@ StackCollector >> getExecutionTraces [
 	^ traces
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'accessing' }
 StackCollector >> getMessageFrom: aReceiverFrame and: aSenderFrame withArguments: aCollectionOfVariables [
 	"Returns the dictionnay corresponding to the message call from a sender to a receiver"
 
-	^ Dictionary
-		  new;
+	^ Dictionary new
 		  at: 'type' put: 'message';
 		  at: 'id' put: self id;
 		  at: 'message_name' put: (aReceiverFrame at: 'name');
@@ -91,7 +89,7 @@ StackCollector >> getMessageFrom: aReceiverFrame and: aSenderFrame withArguments
 		  yourself
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'accessing' }
 StackCollector >> getMethodFrom: aReceiverFrame [
 	"Returns the dictionnay corresponding to the method from a receiver"
 
@@ -116,7 +114,7 @@ StackCollector >> id [
 	^ result
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'accessing' }
 StackCollector >> transformVariables: aDictionary with: aReceiverFrameId [
 	"Tranforms a dap Variable to the expected argument format"
 

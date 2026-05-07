@@ -12,5 +12,5 @@ Class {
 ScriptLauncher >> runPythonProject: aFileReference [
 	"Runs the project, having as entry point aFileRefence, with the python adapter"
 
-	OSPlatform current runCommand: 'python setup.py py ' , aFileReference
+	OSPlatform current runCommand: 'venv/bin/python3 pharo-local/iceberg/Divergence-Driven-Debugging/StackCollector/scripts/setup.py py ' , aFileReference
 ]

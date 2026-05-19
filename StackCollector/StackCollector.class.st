@@ -39,7 +39,7 @@ StackCollector >> clientDap: aDAPClient [
 StackCollector >> getAssignmentFrom: aFrame [
 	"Returns the dictionnay corresponding to the assignment from a frame nil if it's not an assignment"
 
-	| path line frameId name old_value |
+	| path line frameId name evalResponse |
 	path := aFrame at: 'source' at: 'path'.
 	line := aFrame at: 'line'.
 	frameId := aFrame at: 'id'.
@@ -49,20 +49,19 @@ StackCollector >> getAssignmentFrom: aFrame [
 
 	name ifNil: [ ^ nil ].
 
-
-
-	old_value := (clientDap
-		              evaluate: name
-		              frameId: frameId
-		              onErrorDo: [ { ('result' -> nil) } asDictionary ])
-		             at: 'result'.
+	evalResponse := clientDap
+		                evaluate: name
+		                frameId: frameId
+		                onErrorDo: [ ^ nil ].
+	evalResponse at: 'evaluateName' put: name.
 
 	^ Dictionary new
 		  at: 'type' put: 'assignment';
 		  at: 'id' put: self id;
 		  at: 'object' put: nil;
 		  at: 'variable' put: name;
-		  at: 'old_value' put: old_value;
+		  at: 'old_value'
+		  put: (self hashVariable: evalResponse with: frameId);
 		  at: 'new_value' put: nil;
 		  at: 'executed_code' put: {
 				  ('file' -> path).
@@ -101,7 +100,7 @@ StackCollector >> getExecutionTraces [
 						           and: senderFrame
 						           withArguments: arguments.
 
-					method := self getMethodFrom: receiverFrame.
+					method := self getMethodFrom: receiverFrame and: senderFrame.
 
 					traces add: message.
 					traces add: method ].
@@ -119,8 +118,16 @@ StackCollector >> getMessageFrom: aReceiverFrame and: aSenderFrame withArguments
 		  at: 'type' put: 'message';
 		  at: 'id' put: self id;
 		  at: 'message_name' put: (aReceiverFrame at: 'name');
-		  at: 'sender' put: nil;
-		  at: 'receiver' put: nil;
+		  at: 'sender'
+		  put:
+			  (self
+				   hashVariable: clientDap sender
+				   with: (aSenderFrame at: 'id'));
+		  at: 'receiver'
+		  put:
+			  (self
+				   hashVariable: clientDap receiver
+				   with: (aReceiverFrame at: 'id'));
 		  at: 'args' put: aCollectionOfVariables;
 		  at: 'executed_code' put: {
 				  ('file' -> (aSenderFrame at: 'source' at: 'path')).
@@ -129,14 +136,14 @@ StackCollector >> getMessageFrom: aReceiverFrame and: aSenderFrame withArguments
 ]
 
 { #category : 'helpers' }
-StackCollector >> getMethodFrom: aReceiverFrame [
+StackCollector >> getMethodFrom: aReceiverFrame and: aSenderFrame [
 	"Returns the dictionnay corresponding to the method from a receiver"
 
 	^ Dictionary new
 		  at: 'type' put: 'method';
 		  at: 'id' put: self id;
-		  at: 'sender' put: nil;
-		  at: 'receiver' put: nil;
+		  at: 'sender' put: (self hashVariable: clientDap sender with: (aSenderFrame at: 'id'));
+		  at: 'receiver' put: (self hashVariable: clientDap receiver with: (aReceiverFrame at: 'id'));
 		  at: 'method_name' put: (aReceiverFrame at: 'name');
 		  at: 'executed_code' put: {
 				  ('file' -> (aReceiverFrame at: 'source' at: 'path')).
@@ -147,6 +154,8 @@ StackCollector >> getMethodFrom: aReceiverFrame [
 { #category : 'helpers' }
 StackCollector >> hashVariable: aDictionary with: aReceiverFrameId [
 	"Tranforms a dap Variable to the expected argument format"
+
+	aDictionary ifNil: [ ^ nil ].
 
 	^ Dictionary new
 		  at: 'class' put: (aDictionary at: 'type');

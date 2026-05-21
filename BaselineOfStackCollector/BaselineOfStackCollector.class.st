@@ -4,3 +4,15 @@ Class {
 	#category : 'BaselineOfStackCollector',
 	#package : 'BaselineOfStackCollector'
 }
+
+{ #category : 'baselines' }
+BaselineOfStackCollector >> baseline: spec [
+
+	<baseline>
+	spec for: #common do: [
+			spec
+				baseline: 'TreeSitter'
+				with: [
+					spec repository: 'github://Evref-BL/Pharo-Tree-Sitter:main/src' ];
+				package: 'StackCollector' ]
+]

@@ -158,9 +158,9 @@ StackCollector >> hashVariable: aDictionary with: aReceiverFrameId [
 	aDictionary ifNil: [ ^ nil ].
 
 	^ Dictionary new
-		  at: 'class' put: (aDictionary at: 'type');
+		  at: 'class' put: (aDictionary at: 'type' ifAbsent: 'Class Unknown');
 		  at: 'hash' put: ((clientDap
-				    evaluate: 'hash(' , (aDictionary at: 'evaluateName') , ')'
+				    evaluate: 'id(' , (aDictionary at: 'evaluateName') , ')'
 				    frameId: aReceiverFrameId) at: 'result');
 		  yourself
 ]

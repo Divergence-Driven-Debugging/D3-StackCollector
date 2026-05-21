@@ -17,5 +17,6 @@ BaselineOfStackCollector >> baseline: spec [
 				baseline: 'PharoDAPClient'
 				with: [
 					spec repository: 'github://Pharo-XP-Tools/sindarin-dap:main' ];
-				package: 'StackCollector' ]
+				package: 'StackCollector';
+				package: 'StackCollector-Tests' ]
 ]

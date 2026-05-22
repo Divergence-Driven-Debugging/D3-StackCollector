@@ -88,12 +88,14 @@ StackCollector >> getExecutionTraces [
 					receiverFrame := frames first.
 
 					varRef := (clientDap scopesForFrame: (receiverFrame at: 'id'))
-						          first at: 'variablesReference'. "local for python dap"
+						          first at: 'variablesReference'.
+
 					vars := clientDap variablesForReference: varRef.
 					arguments := vars collect: [ :dictionary |
-						             self
-							             transformVariables: dictionary
-							             with: (receiverFrame at: 'id') ].
+							             (dictionary at: 'type') = '' ifFalse: [
+								             self
+									             transformVariables: dictionary
+									             with: (receiverFrame at: 'id') ] ].
 
 					message := self
 						           getMessageFrom: receiverFrame
@@ -158,10 +160,15 @@ StackCollector >> hashVariable: aDictionary with: aReceiverFrameId [
 	aDictionary ifNil: [ ^ nil ].
 
 	^ Dictionary new
-		  at: 'class' put: (aDictionary at: 'type' ifAbsent: 'Class Unknown');
+		  at: 'class'
+		  put: (aDictionary at: 'type' ifAbsent: 'Class Unknown');
 		  at: 'hash' put: ((clientDap
 				    evaluate: 'id(' , (aDictionary at: 'evaluateName') , ')'
-				    frameId: aReceiverFrameId) at: 'result');
+				    frameId: aReceiverFrameId
+				    onErrorDo: [
+						    Dictionary new
+							    at: 'result' put: 'ERROR';
+							    yourself ]) at: 'result');
 		  yourself
 ]
 

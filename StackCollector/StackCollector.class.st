@@ -111,7 +111,6 @@ StackCollector >> getExecutionTraces [
 					traces add: message.
 					traces add: method ].
 
-			self halt.
 			currentFrameBody := clientDap currentFrameBody.
 			assignment := self popPendingAssignment: currentFrameBody.
 			assignment ifNotNil: [ traces add: assignment ].

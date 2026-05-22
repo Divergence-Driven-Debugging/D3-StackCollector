@@ -10,6 +10,7 @@ Class {
 		'id',
 		'assignmentCollector',
 		'fileLineCache'
+		'pendingAssignmentsStack'
 	],
 	#category : 'StackCollector',
 	#package : 'StackCollector'
@@ -77,11 +78,13 @@ StackCollector >> getExecutionTraces [
 	| traces |
 	traces := OrderedCollection new.
 
+	clientDap initializeDapRegistry.
+
 	clientDap stackFrames: clientDap mainThreadId.
 	id := 1.
 
 	clientDap stepUntil: [ false ] do: [
-			| assignment |
+			| assignment currentFrameBody |
 			clientDap hasEnteredNewCall ifTrue: [
 					| message method frames senderFrame receiverFrame varRef vars arguments |
 					frames := clientDap stackFrames: clientDap mainThreadId.
@@ -107,8 +110,12 @@ StackCollector >> getExecutionTraces [
 
 					traces add: message.
 					traces add: method ].
-			assignment := self getAssignmentFrom: clientDap currentFrame.
-			assignment ifNotNil: [ traces add: assignment ] ].
+
+			self halt.
+			currentFrameBody := clientDap currentFrameBody.
+			assignment := self popPendingAssignment: currentFrameBody.
+			assignment ifNotNil: [ traces add: assignment ].
+			self pushPendingAssignment: currentFrameBody ].
 
 	^ traces
 ]
@@ -125,12 +132,12 @@ StackCollector >> getMessageFrom: aReceiverFrame and: aSenderFrame withArguments
 		  put:
 			  (self
 				   hashVariable: clientDap sender
-				   with: (aSenderFrame at: 'id'));
+				   in: (aSenderFrame at: 'id'));
 		  at: 'receiver'
 		  put:
 			  (self
 				   hashVariable: clientDap receiver
-				   with: (aReceiverFrame at: 'id'));
+				   in: (aReceiverFrame at: 'id'));
 		  at: 'args' put: aCollectionOfVariables;
 		  at: 'executed_code' put: {
 				  ('file' -> (aSenderFrame at: 'source' at: 'path')).
@@ -145,8 +152,8 @@ StackCollector >> getMethodFrom: aReceiverFrame and: aSenderFrame [
 	^ Dictionary new
 		  at: 'type' put: 'method';
 		  at: 'id' put: self id;
-		  at: 'sender' put: (self hashVariable: clientDap sender with: (aSenderFrame at: 'id'));
-		  at: 'receiver' put: (self hashVariable: clientDap receiver with: (aReceiverFrame at: 'id'));
+		  at: 'sender' put: (self hashVariable: clientDap sender in: (aSenderFrame at: 'id'));
+		  at: 'receiver' put: (self hashVariable: clientDap receiver in: (aReceiverFrame at: 'id'));
 		  at: 'method_name' put: (aReceiverFrame at: 'name');
 		  at: 'executed_code' put: {
 				  ('file' -> (aReceiverFrame at: 'source' at: 'path')).
@@ -155,7 +162,24 @@ StackCollector >> getMethodFrom: aReceiverFrame and: aSenderFrame [
 ]
 
 { #category : 'helpers' }
-StackCollector >> hashVariable: aDictionary with: aReceiverFrameId [
+StackCollector >> hashExpression: aString in: aFrameId [
+	"Tranforms a dap Variable to the expected argument format"
+
+	| evalResponse |
+	evalResponse := clientDap
+		                evaluate: aString
+		                frameId: aFrameId
+		                onErrorDo: [ ^ nil ].
+		
+	evalResponse
+		at: 'evaluateName'
+		put: aString.
+		
+	^ self hashVariable: evalResponse in: aFrameId
+]
+
+{ #category : 'helpers' }
+StackCollector >> hashVariable: aDictionary in: aReceiverFrameId [
 	"Tranforms a dap Variable to the expected argument format"
 
 	aDictionary ifNil: [ ^ nil ].
@@ -182,7 +206,7 @@ StackCollector >> id [
 	^ result
 ]
 
-{ #category : 'helpers' }
+{ #category : 'initialization' }
 StackCollector >> initialize [
 
 	| parser pythonLanguage |
@@ -192,9 +216,63 @@ StackCollector >> initialize [
 	parser := TSParser new.
 	pythonLanguage := TSLanguage python.
 	parser language: pythonLanguage.
-
 	assignmentCollector parser: parser.
 	fileLineCache := FileLineCache new
+	pendingAssignmentsStack := Stack new
+]
+
+{ #category : 'helpers' }
+StackCollector >> popPendingAssignment: aStackTrace [
+	"Pop a PendingAssignment if the top of aStackTrace is after the pendingAssignment corresponding frame.
+	aStackTrace is the body of a StackTraceResponse"
+
+	| topPendingAssignment topFrameId |
+	pendingAssignmentsStack isEmpty ifTrue: [ ^ nil ].
+
+	topPendingAssignment := pendingAssignmentsStack top.
+
+	(topPendingAssignment hasBeenPassedBy: aStackTrace) ifFalse: [ ^ nil ].
+	topFrameId := (aStackTrace at: 'stackFrames') first at: 'id'.
+
+	pendingAssignmentsStack pop.
+	^ Dictionary new
+		  at: 'type' put: 'assignment';
+		  at: 'id' put: self id;
+		  at: 'object' put: topPendingAssignment object;
+		  at: 'variable' put: topPendingAssignment targetExpression;
+		  at: 'old_value' put: topPendingAssignment oldValue;
+		  at: 'new_value' put: (self
+				   hashExpression: topPendingAssignment targetExpression
+				   in: topFrameId);
+		  at: 'executed_code' put: {
+				  ('file' -> topPendingAssignment filepath).
+				  ('line' -> topPendingAssignment lineNumber) } asDictionary;
+		  yourself
+]
+
+{ #category : 'helpers' }
+StackCollector >> pushPendingAssignment: aStackTrace [
+	"Push a PendingAssignment if the top of aStackTrace is an assignments.
+	aStackTrace is the body of a StackTraceResponse"
+
+	| topFrame path line frameId name |
+	topFrame := (aStackTrace at: 'stackFrames') first.
+	path := topFrame at: 'source' at: 'path'.
+	line := topFrame at: 'line'.
+	frameId := topFrame at: 'id'.
+
+	name := assignmentCollector getAssignmentNameFromLine:
+		        (assignmentCollector getLine: line from: path).
+
+	name ifNil: [ ^ nil ].
+
+	pendingAssignmentsStack push: (PendingAssignment new
+			 object: nil;
+			 oldValue: (self hashExpression: name in: frameId);
+			 targetExpression: name;
+			 stackDepth: (aStackTrace at: 'totalFrames');
+			 lineNumber: line;
+			 filepath: path)
 ]
 
 { #category : 'helpers' }
@@ -204,6 +282,6 @@ StackCollector >> transformVariables: aDictionary with: aReceiverFrameId [
 	^ Dictionary new
 		  at: 'name' put: (aDictionary at: 'name');
 		  at: 'value'
-		  put: (self hashVariable: aDictionary with: aReceiverFrameId);
+		  put: (self hashVariable: aDictionary in: aReceiverFrameId);
 		  yourself
 ]

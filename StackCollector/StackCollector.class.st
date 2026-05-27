@@ -8,7 +8,8 @@ Class {
 	#instVars : [
 		'clientDap',
 		'id',
-		'assignmentCollector'
+		'assignmentCollector',
+		'fileLineCache'
 	],
 	#category : 'StackCollector',
 	#package : 'StackCollector'
@@ -45,7 +46,7 @@ StackCollector >> getAssignmentFrom: aFrame [
 	frameId := aFrame at: 'id'.
 
 	name := assignmentCollector getAssignmentNameFromLine:
-		        (assignmentCollector getLine: line from: path).
+		        (fileLineCache getLine: line from: path).
 
 	name ifNil: [ ^ nil ].
 
@@ -192,7 +193,8 @@ StackCollector >> initialize [
 	pythonLanguage := TSLanguage python.
 	parser language: pythonLanguage.
 
-	assignmentCollector parser: parser
+	assignmentCollector parser: parser.
+	fileLineCache := FileLineCache new
 ]
 
 { #category : 'helpers' }

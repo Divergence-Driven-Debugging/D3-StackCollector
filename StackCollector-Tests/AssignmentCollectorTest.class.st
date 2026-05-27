@@ -73,3 +73,12 @@ AssignmentCollectorTest >> testGetAssignmentNameFromSubscriptAssignment [
 
 	self assert: result equals: { 'arr[0]' }
 ]
+
+{ #category : 'tests' }
+AssignmentCollectorTest >> testGetAssignmentNameFromTupleAssignment [
+
+	| result |
+	result := assignmentCollector getAssignmentNameFromLine: 'a, b = 1, 2'.
+
+	self assert: result equals: { 'a' . 'b' }
+]

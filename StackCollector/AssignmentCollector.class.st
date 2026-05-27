@@ -8,7 +8,28 @@ Class {
 	#package : 'StackCollector'
 }
 
-{ #category : 'accessing' }
+{ #category : 'private - accessing' }
+AssignmentCollector >> collectAssignmentTargetsFrom: aNode
+	source: source
+	into: assignments [
+
+	(#( 'identifier' 'attribute' 'subscript' )
+		includes: aNode type)
+		ifTrue: [
+			assignments add:
+				(aNode textFromSourceText: source).
+			^ self
+		].
+
+	aNode namedChildren do: [ :child |
+		self
+			collectAssignmentTargetsFrom: child
+			source: source
+			into: assignments
+	]
+]
+
+{ #category : 'private - accessing' }
 AssignmentCollector >> collectAssignmentsFrom: aNode source: source into: assignments [
 
 	(#( 'assignment' 'augmented_assignment' ) includes: aNode type)
@@ -17,7 +38,10 @@ AssignmentCollector >> collectAssignmentsFrom: aNode source: source into: assign
 				left := aNode nodeChildByFieldName: 'left'.
 
 				left ifNotNil: [
-					assignments add: (left textFromSourceText: source) ] ].
+						self
+							collectAssignmentTargetsFrom: left
+							source: source
+							into: assignments ] ].
 
 	aNode namedChildren do: [ :child |
 		self collectAssignmentsFrom: child source: source into: assignments ]

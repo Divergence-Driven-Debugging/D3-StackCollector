@@ -49,7 +49,9 @@ AssignmentCollector >> collectAssignmentsFrom: aNode source: source into: assign
 
 { #category : 'accessing' }
 AssignmentCollector >> getAssignmentNameFromLine: aString [
-
+	
+	"Return an Array of string corresponding to the assignment target"
+	
 	| root assignments |
 	
 	root := (parser parseString: aString) rootNode.

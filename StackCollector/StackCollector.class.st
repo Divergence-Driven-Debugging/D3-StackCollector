@@ -254,24 +254,23 @@ StackCollector >> pushPendingAssignment: aStackTrace [
 	"Push a PendingAssignment if the top of aStackTrace is an assignments.
 	aStackTrace is the body of a StackTraceResponse"
 
-	| topFrame path line frameId name |
+	| topFrame path line frameId names |
 	topFrame := (aStackTrace at: 'stackFrames') first.
 	path := topFrame at: 'source' at: 'path'.
 	line := topFrame at: 'line'.
 	frameId := topFrame at: 'id'.
 
-	name := assignmentCollector getAssignmentNameFromLine:
-		        (assignmentCollector getLine: line from: path).
+	names := assignmentCollector getAssignmentNameFromLine:
+		         (assignmentCollector getLine: line from: path).
 
-	name ifNil: [ ^ nil ].
-
-	pendingAssignmentsStack push: (PendingAssignment new
-			 object: nil;
-			 oldValue: (self hashExpression: name in: frameId);
-			 targetExpression: name;
-			 stackDepth: (aStackTrace at: 'totalFrames');
-			 lineNumber: line;
-			 filepath: path)
+	names do: [ :name |
+			pendingAssignmentsStack push: (PendingAssignment new
+					 object: nil;
+					 oldValue: (self hashExpression: name in: frameId);
+					 targetExpression: name;
+					 stackDepth: (aStackTrace at: 'totalFrames');
+					 lineNumber: line;
+					 filepath: path) ]
 ]
 
 { #category : 'helpers' }

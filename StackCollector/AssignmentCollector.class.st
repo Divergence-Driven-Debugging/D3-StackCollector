@@ -9,34 +9,35 @@ Class {
 }
 
 { #category : 'accessing' }
-AssignmentCollector >> getAssignmentNameFromLine: aString [
+AssignmentCollector >> collectAssignmentsFrom: aNode source: source into: assignments [
 
-	| root assignmentNode left |
-	root := (parser parseString: aString) rootNode.
-	assignmentNode := self getAssignmentNodeFrom: root.
+	(#( 'assignment' 'augmented_assignment' ) includes: aNode type)
+		ifTrue: [
+				| left |
+				left := aNode nodeChildByFieldName: 'left'.
 
-	assignmentNode ifNil: [ ^ nil ].
+				left ifNotNil: [
+					assignments add: (left textFromSourceText: source) ] ].
 
-	left := assignmentNode firstNamedChild.
-
-	^ left textFromSourceText: aString
+	aNode namedChildren do: [ :child |
+		self collectAssignmentsFrom: child source: source into: assignments ]
 ]
 
-{ #category : 'helper' }
-AssignmentCollector >> getAssignmentNodeFrom: aTree [
-	"Return the assignment TSNode found in aTree.
-	Return nil if none is found."
+{ #category : 'accessing' }
+AssignmentCollector >> getAssignmentNameFromLine: aString [
 
-	| node |
-	node := aTree firstNamedChild.
-	node isNull ifTrue: [ ^ nil ].
+	| root assignments |
+	
+	root := (parser parseString: aString) rootNode.
 
-	node := node firstNamedChild.
-	node isNull ifTrue: [ ^ nil ].
-	(#( 'assignment' 'augmented_assignment' ) includes: node type)
-		ifFalse: [ ^ nil ].
+	assignments := OrderedCollection new.
 
-	^ node
+	self
+		collectAssignmentsFrom: root
+		source: aString
+		into: assignments.
+
+	^ assignments asArray
 ]
 
 { #category : 'accessing' }

@@ -62,7 +62,7 @@ AssignmentCollectorTest >> testGetAssignmentNameFromCompleTupleAssignment [
 AssignmentCollectorTest >> testGetAssignmentNameFromComplexTypedAssignment [
 
 	| result |
-	result := assignmentCollector getAssignmentNameFromLine: '(a, b): tuple[int, int] = foo()'.
+	result := assignmentCollector getAssignmentNameFromLine: '(a, b): tuple[int, int] = x'.
 
 	self assert: result equals: { 'a' . 'b' }
 ]

@@ -39,6 +39,16 @@ AssignmentCollectorTest >> testGetAssignmentNameFromAugmentedAssignment [
 ]
 
 { #category : 'tests' }
+AssignmentCollectorTest >> testGetAssignmentNameFromChainedAssignment [
+
+	| result |
+	result := assignmentCollector getAssignmentNameFromLine:
+		          'a = b = c = d'.
+
+	self assert: result equals: { 'a'. 'b'. 'c' }
+]
+
+{ #category : 'tests' }
 AssignmentCollectorTest >> testGetAssignmentNameFromCompleTupleAssignment [
 
 	| result |
@@ -46,6 +56,15 @@ AssignmentCollectorTest >> testGetAssignmentNameFromCompleTupleAssignment [
 		          '(a, (b, c)) = x'.
 
 	self assert: result equals: { 'a'. 'b'. 'c' }
+]
+
+{ #category : 'tests' }
+AssignmentCollectorTest >> testGetAssignmentNameFromListUnpacking [
+
+	| result |
+	result := assignmentCollector getAssignmentNameFromLine: '[a, b] = x'.
+
+	self assert: result equals: { 'a' . 'b' }
 ]
 
 { #category : 'tests' }
@@ -83,6 +102,15 @@ AssignmentCollectorTest >> testGetAssignmentNameFromSimpleLine [
 	result := assignmentCollector getAssignmentNameFromLine: 'x = 1'.
 
 	self assert: result equals: { 'x' }
+]
+
+{ #category : 'tests' }
+AssignmentCollectorTest >> testGetAssignmentNameFromStarUnpacking [
+
+	| result |
+	result := assignmentCollector getAssignmentNameFromLine: 'a, *rest = x'.
+
+	self assert: result equals: { 'a' . 'rest' }
 ]
 
 { #category : 'tests' }

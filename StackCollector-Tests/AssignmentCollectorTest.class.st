@@ -39,6 +39,26 @@ AssignmentCollectorTest >> testGetAssignmentNameFromAugmentedAssignment [
 ]
 
 { #category : 'tests' }
+AssignmentCollectorTest >> testGetAssignmentNameFromCompleTupleAssignment [
+
+	| result |
+	result := assignmentCollector getAssignmentNameFromLine:
+		          '(a, (b, c)) = x'.
+
+	self assert: result equals: { 'a'. 'b'. 'c' }
+]
+
+{ #category : 'tests' }
+AssignmentCollectorTest >> testGetAssignmentNameFromLongTupleAssignment [
+
+	| result |
+	result := assignmentCollector getAssignmentNameFromLine:
+		          'a, b, c, d, e, f = 1, 2, 3, 4, 5, 6'.
+
+	self assert: result equals: { 'a'. 'b'. 'c'. 'd'. 'e'. 'f' }
+]
+
+{ #category : 'tests' }
 AssignmentCollectorTest >> testGetAssignmentNameFromMultipleAssignments [
 
 	| result |

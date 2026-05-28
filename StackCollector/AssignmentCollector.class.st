@@ -1,3 +1,8 @@
+"
+I extract assignment variable names from source code lines using a Tree-sitter parser.
+
+I analyze a single line of source text, locate assignment nodes and answer the name of the assigned variable when an assignment is present. Both standard assignments and augmented assignments are supported.
+"
 Class {
 	#name : 'AssignmentCollector',
 	#superclass : 'Object',
@@ -9,28 +14,27 @@ Class {
 }
 
 { #category : 'private - accessing' }
-AssignmentCollector >> collectAssignmentTargetsFrom: aNode
-	source: source
-	into: assignments [
+AssignmentCollector >> collectAssignmentTargetsFrom: aNode source: source into: assignments [
+	"Recursively collect assignment targets from the left-hand
+	side of an assignment expression."
 
-	(#( 'identifier' 'attribute' 'subscript' )
-		includes: aNode type)
+	(#( 'identifier' 'attribute' 'subscript' ) includes: aNode type)
 		ifTrue: [
-			assignments add:
-				(aNode textFromSourceText: source).
-			^ self
-		].
+				assignments add: (aNode textFromSourceText: source).
+				^ self ].
 
+	"Traverse child nodes to find nested targets."
 	aNode namedChildren do: [ :child |
-		self
-			collectAssignmentTargetsFrom: child
-			source: source
-			into: assignments
-	]
+			self
+				collectAssignmentTargetsFrom: child
+				source: source
+				into: assignments ]
 ]
 
 { #category : 'private - accessing' }
 AssignmentCollector >> collectAssignmentsFrom: aNode source: source into: assignments [
+	"Recursively traverse the AST and collect assignment targets
+	from assignment and augmented assignment nodes."
 
 	(#( 'assignment' 'augmented_assignment' ) includes: aNode type)
 		ifTrue: [
@@ -43,6 +47,7 @@ AssignmentCollector >> collectAssignmentsFrom: aNode source: source into: assign
 							source: source
 							into: assignments ] ].
 
+	"Continue traversal on child nodes."
 	aNode namedChildren do: [ :child |
 		self collectAssignmentsFrom: child source: source into: assignments ]
 ]

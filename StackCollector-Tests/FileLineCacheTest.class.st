@@ -35,7 +35,7 @@ FileLineCacheTest >> setUp [
 { #category : 'running' }
 FileLineCacheTest >> tearDown [
 
-	fileRef exists ifTrue: [ fileRef delete ].
+	fileRef delete.
 	super tearDown
 ]
 

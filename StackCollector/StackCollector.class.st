@@ -9,7 +9,7 @@ Class {
 		'clientDap',
 		'id',
 		'assignmentCollector',
-		'fileLineCache'
+		'fileLineCache',
 		'pendingAssignmentsStack'
 	],
 	#category : 'StackCollector',

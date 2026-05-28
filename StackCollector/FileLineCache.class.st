@@ -13,6 +13,12 @@ Class {
 	#package : 'StackCollector'
 }
 
+{ #category : 'accessing' }
+FileLineCache >> cache [
+	
+	^ cache
+]
+
 { #category : 'loading' }
 FileLineCache >> getLine: aNumber from: aFileReference [
 

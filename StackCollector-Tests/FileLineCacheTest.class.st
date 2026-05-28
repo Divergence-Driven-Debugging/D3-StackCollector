@@ -58,7 +58,12 @@ FileLineCacheTest >> testGetLineOutOfBounds [
 FileLineCacheTest >> testLoadLinesFor [
 
 	| first second |
+	self assert: cache cache isEmpty.
 	first := cache loadLinesFor: fileRef.
+	self assert: cache cache isNotEmpty.
+	self assert: first first equals: 'line1'.
+	self assert: (first at: 2) equals: 'line2'.
+	self assert: (first at: 3) equals: 'line3'.
 	second := cache loadLinesFor: fileRef.
 	self assert: first identicalTo: second
 ]

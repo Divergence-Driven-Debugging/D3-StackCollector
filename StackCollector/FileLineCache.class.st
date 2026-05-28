@@ -9,10 +9,10 @@ Class {
 }
 
 { #category : 'loading' }
-FileLineCache >> getLine: aNumber from: aString [
+FileLineCache >> getLine: aNumber from: aFileReference [
 
 	| lines |
-	lines := self loadLinesFor: aString.
+	lines := self loadLinesFor: aFileReference.
 	^ lines at: aNumber ifAbsent: [ nil ]
 ]
 
@@ -24,10 +24,10 @@ FileLineCache >> initialize [
 ]
 
 { #category : 'loading' }
-FileLineCache >> loadLinesFor: aString [
+FileLineCache >> loadLinesFor: aFileReference [
 
-	^ cache at: aString ifAbsentPut: [
-			  aString asFileReference readStreamDo: [ :stream |
+	^ cache at: aFileReference fullName ifAbsentPut: [
+			  aFileReference readStreamDo: [ :stream |
 					  Array streamContents: [ :out |
 						  [ stream atEnd ] whileFalse: [ out nextPut: stream nextLine ] ] ] ]
 ]

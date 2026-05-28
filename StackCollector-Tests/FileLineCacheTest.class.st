@@ -43,24 +43,24 @@ FileLineCacheTest >> tearDown [
 FileLineCacheTest >> testCacheIsUsed [
 
 	| first second |
-	first := cache loadLinesFor: fileName.
-	second := cache loadLinesFor: fileName.
+	first := cache loadLinesFor: fileRef.
+	second := cache loadLinesFor: fileRef.
 	self assert: first identicalTo: second
 ]
 
 { #category : 'tests' }
 FileLineCacheTest >> testGetLineBasic [
 
-	self assert: (cache getLine: 1 from: fileName) equals: 'line1'.
-	self assert: (cache getLine: 2 from: fileName) equals: 'line2'.
-	self assert: (cache getLine: 3 from: fileName) equals: 'line3'
+	self assert: (cache getLine: 1 from: fileRef) equals: 'line1'.
+	self assert: (cache getLine: 2 from: fileRef) equals: 'line2'.
+	self assert: (cache getLine: 3 from: fileRef) equals: 'line3'
 ]
 
 { #category : 'tests' }
 FileLineCacheTest >> testGetLineOutOfBounds [
 
-	self assert: (cache getLine: 10 from: fileName) isNil.
-	self assert: (cache getLine: 0 from: fileName) isNil
+	self assert: (cache getLine: 10 from: fileRef) isNil.
+	self assert: (cache getLine: 0 from: fileRef) isNil
 ]
 
 { #category : 'tests' }
@@ -75,8 +75,8 @@ FileLineCacheTest >> testMultipleFiles [
 				cr;
 				nextPutAll: 'B' ].
 
-	self assert: (cache getLine: 1 from: fileName) equals: 'line1'.
-	self assert: (cache getLine: 1 from: file2 fullName) equals: 'A'.
+	self assert: (cache getLine: 1 from: fileRef) equals: 'line1'.
+	self assert: (cache getLine: 1 from: file2) equals: 'A'.
 
 	file2 delete
 ]
@@ -86,11 +86,11 @@ FileLineCacheTest >> testSecondAccessIsFast [
 
 	| t1 t2 |
 	t1 := Time millisecondClockValue.
-	cache getLine: 2 from: fileName.
+	cache getLine: 2 from: fileRef.
 	t1 := Time millisecondClockValue - t1.
 
 	t2 := Time millisecondClockValue.
-	cache getLine: 2 from: fileName.
+	cache getLine: 2 from: fileRef.
 	t2 := Time millisecondClockValue - t2.
 
 	self assert: t2 <= t1

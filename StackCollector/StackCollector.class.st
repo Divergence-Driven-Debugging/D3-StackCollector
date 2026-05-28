@@ -46,7 +46,7 @@ StackCollector >> getAssignmentFrom: aFrame [
 	frameId := aFrame at: 'id'.
 
 	name := assignmentCollector getAssignmentNameFromLine:
-		        (fileLineCache getLine: line from: path).
+		        (fileLineCache getLine: line from: path asFileReference ).
 
 	name ifNil: [ ^ nil ].
 

@@ -8,6 +8,13 @@ Class {
 	#package : 'StackCollector-Tests'
 }
 
+{ #category : 'initialization' }
+AssignmentCollectorTest >> initialize [
+	"We ensure the installation of the library before running the tests because it could cause a time limit to fails for the test installing the libraries."
+
+	TSLibrariesPython new ensurePythonLibraryExists
+]
+
 { #category : 'running' }
 AssignmentCollectorTest >> setUp [
 	| parser pythonLanguage |

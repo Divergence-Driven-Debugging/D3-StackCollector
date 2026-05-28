@@ -40,16 +40,7 @@ FileLineCacheTest >> tearDown [
 ]
 
 { #category : 'tests' }
-FileLineCacheTest >> testCacheIsUsed [
-
-	| first second |
-	first := cache loadLinesFor: fileRef.
-	second := cache loadLinesFor: fileRef.
-	self assert: first identicalTo: second
-]
-
-{ #category : 'tests' }
-FileLineCacheTest >> testGetLineBasic [
+FileLineCacheTest >> testGetLineFrom [
 
 	self assert: (cache getLine: 1 from: fileRef) equals: 'line1'.
 	self assert: (cache getLine: 2 from: fileRef) equals: 'line2'.
@@ -61,6 +52,15 @@ FileLineCacheTest >> testGetLineOutOfBounds [
 
 	self assert: (cache getLine: 10 from: fileRef) isNil.
 	self assert: (cache getLine: 0 from: fileRef) isNil
+]
+
+{ #category : 'tests' }
+FileLineCacheTest >> testLoadLinesFor [
+
+	| first second |
+	first := cache loadLinesFor: fileRef.
+	second := cache loadLinesFor: fileRef.
+	self assert: first identicalTo: second
 ]
 
 { #category : 'tests' }

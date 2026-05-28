@@ -216,7 +216,7 @@ StackCollector >> initialize [
 	pythonLanguage := TSLanguage python.
 	parser language: pythonLanguage.
 	assignmentCollector parser: parser.
-	fileLineCache := FileLineCache new
+	fileLineCache := FileLineCache new.
 	pendingAssignmentsStack := Stack new
 ]
 

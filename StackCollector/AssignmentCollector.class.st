@@ -40,19 +40,6 @@ AssignmentCollector >> getAssignmentNodeFrom: aTree [
 ]
 
 { #category : 'accessing' }
-AssignmentCollector >> getLine: aNumber from: aString [
-
-	^ aString asFileReference readStreamDo: [ :stream |
-			  | index line |
-			  index := 0.
-			  [ stream atEnd ] whileFalse: [
-					  line := stream nextLine.
-					  index := index + 1.
-					  index = aNumber ifTrue: [ ^ line ] ].
-			  nil ]
-]
-
-{ #category : 'accessing' }
 AssignmentCollector >> parser [
 
 	^ parser

@@ -1,3 +1,9 @@
+"
+Represents a pending assignment detected during stack collection or analysis.
+
+A PendingAssignment captures the state of an assignment that has not yet been
+fully resolved. It is created while inspecting execution stacks when their is an assignment.
+"
 Class {
 	#name : 'PendingAssignment',
 	#superclass : 'Object',

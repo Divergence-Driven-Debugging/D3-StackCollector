@@ -11,6 +11,7 @@ Class {
 		'object',
 		'oldValue',
 		'targetExpression',
+		'objectExpression',
 		'stackDepth',
 		'lineNumber',
 		'filepath'
@@ -72,6 +73,18 @@ PendingAssignment >> object [
 PendingAssignment >> object: anObject [
 
 	object := anObject
+]
+
+{ #category : 'accessing' }
+PendingAssignment >> objectExpression [
+
+	^ objectExpression
+]
+
+{ #category : 'accessing' }
+PendingAssignment >> objectExpression: anObject [
+
+	objectExpression := anObject
 ]
 
 { #category : 'accessing' }

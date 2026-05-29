@@ -191,28 +191,39 @@ StackCollector >> popPendingAssignment: aStackTrace [
 	"Pop a PendingAssignment if the top of aStackTrace is after the pendingAssignment corresponding frame.
 	aStackTrace is the body of a StackTraceResponse"
 
-	| topPendingAssignment topFrameId |
+	| topPendingAssignment topFrameId assignment |
 	pendingAssignmentsStack isEmpty ifTrue: [ ^ nil ].
 
 	topPendingAssignment := pendingAssignmentsStack top.
 
 	(topPendingAssignment hasBeenPassedBy: aStackTrace) ifFalse: [ ^ nil ].
 	topFrameId := (aStackTrace at: 'stackFrames') first at: 'id'.
-
 	pendingAssignmentsStack pop.
-	^ Dictionary new
-		  at: 'type' put: 'assignment';
-		  at: 'id' put: self id;
-		  at: 'object' put: topPendingAssignment object;
-		  at: 'variable' put: topPendingAssignment targetExpression;
-		  at: 'old_value' put: topPendingAssignment oldValue;
-		  at: 'new_value' put: (self
-				   hashExpression: topPendingAssignment targetExpression
-				   in: topFrameId);
-		  at: 'executed_code' put: {
-				  ('file' -> topPendingAssignment filepath).
-				  ('line' -> topPendingAssignment lineNumber) } asDictionary;
-		  yourself
+
+	assignment := Dictionary new
+		              at: 'type' put: 'assignment';
+		              at: 'id' put: self id;
+		              at: 'object' put: topPendingAssignment object;
+		              at: 'variable'
+		              put: topPendingAssignment targetExpression;
+		              at: 'old_value' put: topPendingAssignment oldValue;
+		              at: 'executed_code' put: {
+				              ('file' -> topPendingAssignment filepath).
+				              ('line' -> topPendingAssignment lineNumber) }
+				              asDictionary;
+		              yourself.
+
+	topPendingAssignment object
+		ifNil: [
+				assignment at: 'new_value' put: (self
+						 hashExpression: topPendingAssignment targetExpression
+						 in: topFrameId) ]
+		ifNotNil: [
+				assignment at: 'new_value' put: (self
+						 hashExpression: topPendingAssignment objectExpression , '.'
+							 , topPendingAssignment targetExpression
+						 in: topFrameId) ].
+	^ assignment
 ]
 
 { #category : 'helpers' }
@@ -236,13 +247,36 @@ StackCollector >> pushPendingAssignment: aStackTrace [
 
 	names do: [ :name |
 			(top isNil or: [ top targetExpression ~= name ]) ifTrue: [
-					pendingAssignmentsStack push: (PendingAssignment new
-							 object: nil;
-							 oldValue: (self hashExpression: name in: frameId);
-							 targetExpression: name;
-							 stackDepth: depth;
-							 lineNumber: line;
-							 filepath: path) ] ]
+					| pendingAssignment split |
+					pendingAssignment := PendingAssignment new
+						                     oldValue:
+							                     (self hashExpression: name in: frameId);
+						                     stackDepth: depth;
+						                     lineNumber: line;
+						                     filepath: path.
+
+					split := name splitOnFirst: $..
+
+					split first = 'self'
+						ifTrue: [
+								| key this objExpr |
+								self flag: 'move this to clientDAP backend'.
+								this := split first.
+								key := clientDap backend generateKey.
+								clientDap backend store: key forExpression: this.
+								objExpr := clientDap backend readExpressionForKey: key.
+
+								pendingAssignment
+									object: (self hashExpression: this in: frameId);
+									targetExpression: split last;
+									objectExpression: objExpr ]
+						ifFalse: [
+								pendingAssignment
+									object: nil;
+									targetExpression: name;
+									objectExpression: '' ].
+
+					pendingAssignmentsStack push: pendingAssignment ] ]
 ]
 
 { #category : 'helpers' }

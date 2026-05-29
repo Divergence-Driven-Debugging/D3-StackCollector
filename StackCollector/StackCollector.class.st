@@ -37,40 +37,6 @@ StackCollector >> clientDap: aDAPClient [
 	clientDap := aDAPClient
 ]
 
-{ #category : 'helpers' }
-StackCollector >> getAssignmentFrom: aFrame [
-	"Returns the dictionnay corresponding to the assignment from a frame nil if it's not an assignment"
-
-	| path line frameId name evalResponse |
-	path := aFrame at: 'source' at: 'path'.
-	line := aFrame at: 'line'.
-	frameId := aFrame at: 'id'.
-
-	name := assignmentCollector getAssignmentNameFromLine:
-		        (fileLineCache getLine: line from: path asFileReference ).
-
-	name ifNil: [ ^ nil ].
-
-	evalResponse := clientDap
-		                evaluate: name
-		                frameId: frameId
-		                onErrorDo: [ ^ nil ].
-	evalResponse at: 'evaluateName' put: name.
-
-	^ Dictionary new
-		  at: 'type' put: 'assignment';
-		  at: 'id' put: self id;
-		  at: 'object' put: nil;
-		  at: 'variable' put: name;
-		  at: 'old_value'
-		  put: (self hashVariable: evalResponse with: frameId);
-		  at: 'new_value' put: nil;
-		  at: 'executed_code' put: {
-				  ('file' -> path).
-				  ('line' -> line) } asDictionary;
-		  yourself
-]
-
 { #category : 'accessing' }
 StackCollector >> getExecutionTraces [
 	"Return the execution trace from the dap client connected to a debugger"
@@ -262,7 +228,7 @@ StackCollector >> pushPendingAssignment: aStackTrace [
 	depth := aStackTrace at: 'totalFrames'.
 
 	names := assignmentCollector getAssignmentNameFromLine:
-		         (assignmentCollector getLine: line from: path).
+		         (fileLineCache getLine: line from: path asFileReference).
 
 	top := pendingAssignmentsStack isEmpty
 		       ifTrue: [ nil ]

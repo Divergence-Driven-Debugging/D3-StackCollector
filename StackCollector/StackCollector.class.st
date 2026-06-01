@@ -50,37 +50,47 @@ StackCollector >> getExecutionTraces [
 	id := 1.
 
 	clientDap stepUntil: [ false ] do: [
-			| assignment currentFrameBody |
-			clientDap hasEnteredNewCall ifTrue: [
-					| message method frames senderFrame receiverFrame varRef vars arguments |
-					frames := clientDap stackFrames: clientDap mainThreadId.
-					senderFrame := frames second.
-					receiverFrame := frames first.
-
-					varRef := (clientDap scopesForFrame: (receiverFrame at: 'id'))
-						          first at: 'variablesReference'.
-
-					vars := clientDap variablesForReference: varRef.
-					arguments := vars collect: [ :dictionary |
-							             (dictionary at: 'type') = '' ifFalse: [
-								             self
-									             transformVariables: dictionary
-									             with: (receiverFrame at: 'id') ] ].
-
-					message := self
-						           getMessageFrom: receiverFrame
-						           and: senderFrame
-						           withArguments: arguments.
-
-					method := self getMethodFrom: receiverFrame and: senderFrame.
-
-					traces add: message.
-					traces add: method ].
+			| hasEnteredNewCall assignment currentFrameBody currentPath |
+			hasEnteredNewCall := clientDap hasEnteredNewCall.
 
 			currentFrameBody := clientDap currentFrameBody.
-			assignment := self popPendingAssignment: currentFrameBody.
-			assignment ifNotNil: [ traces add: assignment ].
-			self pushPendingAssignment: currentFrameBody ].
+			currentPath := (currentFrameBody at: 'stackFrames') first
+				               at: 'source'
+				               at: 'path'.
+
+			"filter out runpy"
+			(currentPath includesSubstring: 'runpy.py')
+				ifTrue: [ clientDap stepOut ]
+				ifFalse: [
+						hasEnteredNewCall ifTrue: [
+								| message method frames senderFrame receiverFrame varRef vars arguments |
+								frames := clientDap stackFrames: clientDap mainThreadId.
+								senderFrame := frames second.
+								receiverFrame := frames first.
+
+								varRef := (clientDap scopesForFrame: (receiverFrame at: 'id'))
+									          first at: 'variablesReference'.
+
+								vars := clientDap variablesForReference: varRef.
+								arguments := vars collect: [ :dictionary |
+										             (dictionary at: 'type') = '' ifFalse: [
+											             self
+												             transformVariables: dictionary
+												             with: (receiverFrame at: 'id') ] ].
+
+								message := self
+									           getMessageFrom: receiverFrame
+									           and: senderFrame
+									           withArguments: arguments.
+
+								method := self getMethodFrom: receiverFrame and: senderFrame.
+
+								traces add: message.
+								traces add: method ].
+
+						assignment := self popPendingAssignment: currentFrameBody.
+						assignment ifNotNil: [ traces add: assignment ].
+						self pushPendingAssignment: currentFrameBody ] ].
 
 	^ traces
 ]

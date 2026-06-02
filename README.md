@@ -6,7 +6,7 @@ Note that it only supports launching of Python projects for now.
 ## How to
 
 Pharo 13
-```
+```smalltalk
 Metacello new
 	baseline: 'StackCollector';
 	repository: 'github://Divergence-Driven-Debugging/D3-StackCollector';

@@ -256,7 +256,7 @@ StackCollector >> pushPendingAssignment: aStackTrace [
 		       ifFalse: [ pendingAssignmentsStack top ].
 
 	names do: [ :name |
-			(top isNil or: [ top targetExpression ~= name ]) ifTrue: [
+			(top isNil or: [ top targetExpression = name ]) ifTrue: [
 					| pendingAssignment split |
 					pendingAssignment := PendingAssignment new
 						                     oldValue:

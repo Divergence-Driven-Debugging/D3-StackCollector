@@ -267,8 +267,8 @@ StackCollector >> pushPendingAssignment: aStackTrace [
 
 					split := name splitOnFirst: $..
 
-					split first = 'self'
-						ifTrue: [
+					split second isEmpty
+						ifFalse: [
 								| key this objExpr |
 								self flag: 'move this to clientDAP backend'.
 								this := split first.
@@ -280,7 +280,7 @@ StackCollector >> pushPendingAssignment: aStackTrace [
 									object: (self hashExpression: this in: frameId);
 									targetExpression: split last;
 									objectExpression: objExpr ]
-						ifFalse: [
+						ifTrue: [
 								pendingAssignment
 									object: nil;
 									targetExpression: name;

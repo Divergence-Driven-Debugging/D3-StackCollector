@@ -21,9 +21,7 @@ AssignmentCollectorTest >> setUp [
 	super setUp.
 
 	assignmentCollector := AssignmentCollector new.
-	parser := TSParser new.
-	pythonLanguage := TSLanguage python.
-	parser language: pythonLanguage.
+	parser := TSParser new language: TSLanguage python.
 	assignmentCollector parser: parser.
 ]
 

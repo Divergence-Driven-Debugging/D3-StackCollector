@@ -17,12 +17,14 @@ AssignmentCollectorTest >> initialize [
 
 { #category : 'running' }
 AssignmentCollectorTest >> setUp [
-	| parser pythonLanguage |
+	| parser |
 	super setUp.
 
 	assignmentCollector := AssignmentCollector new.
-	parser := TSParser new language: TSLanguage python.
-	assignmentCollector parser: parser.
+	parser := TSParser new
+		          language: TSLanguage python;
+		          yourself.
+	assignmentCollector parser: parser
 ]
 
 { #category : 'tests' }

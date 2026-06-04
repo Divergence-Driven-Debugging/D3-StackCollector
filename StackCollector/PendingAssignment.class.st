@@ -48,7 +48,7 @@ PendingAssignment >> hasBeenPassedBy: aStackTrace [
 	topFrame := (aStackTrace at: 'stackFrames') first.
 	currentLine := topFrame at: 'line'.
 
-	^ currentLine > lineNumber
+	^ currentLine ~= lineNumber
 ]
 
 { #category : 'accessing' }

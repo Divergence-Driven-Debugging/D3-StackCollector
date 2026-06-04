@@ -30,7 +30,8 @@ PendingAssignmentTest >> testHasBeenPassedBy [
 	smallerDepth := self helperCreateStackFrameDepth: 1 line: 9.
 	biggerDepth := self helperCreateStackFrameDepth: 3 line: 11.
 
-	self deny: (aPendingAssignment hasBeenPassedBy: sameDepthBeforeLine).
+	self assert:
+		(aPendingAssignment hasBeenPassedBy: sameDepthBeforeLine). "can happend in a loop"
 	self deny: (aPendingAssignment hasBeenPassedBy: sameDepthAndLine).
 	self assert: (aPendingAssignment hasBeenPassedBy: sameDepthAfterLine).
 

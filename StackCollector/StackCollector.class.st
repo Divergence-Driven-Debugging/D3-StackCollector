@@ -174,6 +174,7 @@ StackCollector >> hashVariable: aDictionary in: aReceiverFrameId [
 
 { #category : 'accessing' }
 StackCollector >> id [
+	"Returns the current unique identifier and increments it for the next use."
 
 	| result |
 	result := id.

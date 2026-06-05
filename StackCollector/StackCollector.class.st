@@ -25,6 +25,37 @@ StackCollector class >> collectStackFrom: aDAPClient [
 	^ collector getExecutionTraces
 ]
 
+{ #category : 'helpers' }
+StackCollector >> addAssignmentTraceFrom: currentFrameBody to: traces [
+
+	| assignment |
+	assignment := self popPendingAssignment: currentFrameBody.
+
+	assignment ifNotNil: [ traces add: assignment ].
+
+	self pushPendingAssignment: currentFrameBody
+]
+
+{ #category : 'helpers' }
+StackCollector >> addCallTraceTo: traces [
+
+	traces addAll: self currentCallTraces
+]
+
+{ #category : 'helpers' }
+StackCollector >> argumentsForFrame: aReceiverFrame [
+
+	| variableReference |
+	variableReference := (clientDap scopesForFrame:
+		                      (aReceiverFrame at: 'id')) first at:
+		                     'variablesReference'.
+
+	^ (clientDap variablesForReference: variableReference)
+		  select: [ :each | (each at: 'type') isNotEmpty ]
+		  thenCollect: [ :each |
+			  self transformVariables: each with: (aReceiverFrame at: 'id') ]
+]
+
 { #category : 'accessing' }
 StackCollector >> clientDap [
 
@@ -37,6 +68,32 @@ StackCollector >> clientDap: aDAPClient [
 	clientDap := aDAPClient
 ]
 
+{ #category : 'helpers' }
+StackCollector >> currentCallTraces [
+
+	| frames senderFrame receiverFrame arguments |
+	frames := clientDap stackFrames: clientDap mainThreadId.
+	senderFrame := frames second.
+	receiverFrame := frames first.
+
+	arguments := self argumentsForFrame: receiverFrame.
+
+	^ {
+		  (self
+			   getMessageFrom: receiverFrame
+			   and: senderFrame
+			   withArguments: arguments).
+		  (self getMethodFrom: receiverFrame and: senderFrame) }
+]
+
+{ #category : 'helpers' }
+StackCollector >> executedCodeForFrame: aFrame [
+
+	^ {
+		  ('file' -> (aFrame at: 'source' at: 'path')).
+		  ('line' -> (aFrame at: 'line')) } asDictionary
+]
+
 { #category : 'accessing' }
 StackCollector >> getExecutionTraces [
 	"Return the execution trace from the dap client connected to a debugger"
@@ -44,53 +101,11 @@ StackCollector >> getExecutionTraces [
 	| traces |
 	traces := OrderedCollection new.
 
-	clientDap initializeDapRegistry.
+	self initializeExecutionTracing.
 
-	clientDap stackFrames: clientDap mainThreadId.
-	id := 1.
-
-	clientDap stepUntil: [ false ] do: [
-			| hasEnteredNewCall assignment currentFrameBody currentPath |
-			hasEnteredNewCall := clientDap hasEnteredNewCall.
-
-			currentFrameBody := clientDap currentFrameBody.
-			currentPath := (currentFrameBody at: 'stackFrames') first
-				               at: 'source'
-				               at: 'path'.
-
-			"filter out runpy"
-			(currentPath includesSubstring: 'runpy.py')
-				ifTrue: [ clientDap stepOut ]
-				ifFalse: [
-						hasEnteredNewCall ifTrue: [
-								| message method frames senderFrame receiverFrame varRef vars arguments |
-								frames := clientDap stackFrames: clientDap mainThreadId.
-								senderFrame := frames second.
-								receiverFrame := frames first.
-
-								varRef := (clientDap scopesForFrame: (receiverFrame at: 'id'))
-									          first at: 'variablesReference'.
-
-								vars := clientDap variablesForReference: varRef.
-								arguments := vars collect: [ :dictionary |
-										             (dictionary at: 'type') = '' ifFalse: [
-											             self
-												             transformVariables: dictionary
-												             with: (receiverFrame at: 'id') ] ].
-
-								message := self
-									           getMessageFrom: receiverFrame
-									           and: senderFrame
-									           withArguments: arguments.
-
-								method := self getMethodFrom: receiverFrame and: senderFrame.
-
-								traces add: message.
-								traces add: method ].
-
-						assignment := self popPendingAssignment: currentFrameBody.
-						assignment ifNotNil: [ traces add: assignment ].
-						self pushPendingAssignment: currentFrameBody ] ].
+	clientDap
+		stepUntil: [ false ]
+		do: [ self processCurrentStepInto: traces ].
 
 	^ traces
 ]
@@ -105,18 +120,15 @@ StackCollector >> getMessageFrom: aReceiverFrame and: aSenderFrame withArguments
 		  at: 'message_name' put: (aReceiverFrame at: 'name');
 		  at: 'sender'
 		  put:
-			  (self
-				   hashVariable: clientDap sender
-				   in: (aSenderFrame at: 'id'));
+			  (self hashVariable: clientDap sender in: (aSenderFrame at: 'id'));
 		  at: 'receiver'
 		  put:
 			  (self
 				   hashVariable: clientDap receiver
 				   in: (aReceiverFrame at: 'id'));
 		  at: 'args' put: aCollectionOfVariables;
-		  at: 'executed_code' put: {
-				  ('file' -> (aSenderFrame at: 'source' at: 'path')).
-				  ('line' -> (aSenderFrame at: 'line')) } asDictionary;
+		  at: 'executed_code'
+		  put: (self executedCodeForFrame: aSenderFrame);
 		  yourself
 ]
 
@@ -127,12 +139,17 @@ StackCollector >> getMethodFrom: aReceiverFrame and: aSenderFrame [
 	^ Dictionary new
 		  at: 'type' put: 'method';
 		  at: 'id' put: self id;
-		  at: 'sender' put: (self hashVariable: clientDap sender in: (aSenderFrame at: 'id'));
-		  at: 'receiver' put: (self hashVariable: clientDap receiver in: (aReceiverFrame at: 'id'));
+		  at: 'sender'
+		  put:
+			  (self hashVariable: clientDap sender in: (aSenderFrame at: 'id'));
+		  at: 'receiver'
+		  put:
+			  (self
+				   hashVariable: clientDap receiver
+				   in: (aReceiverFrame at: 'id'));
 		  at: 'method_name' put: (aReceiverFrame at: 'name');
-		  at: 'executed_code' put: {
-				  ('file' -> (aReceiverFrame at: 'source' at: 'path')).
-				  ('line' -> (aReceiverFrame at: 'line')) } asDictionary;
+		  at: 'executed_code'
+		  put: (self executedCodeForFrame: aReceiverFrame);
 		  yourself
 ]
 
@@ -198,6 +215,14 @@ StackCollector >> initialize [
 ]
 
 { #category : 'helpers' }
+StackCollector >> initializeExecutionTracing [
+
+	clientDap initializeDapRegistry.
+	clientDap stackFrames: clientDap mainThreadId. "Need one stacktrace request for clientDap hasEnteredNewCall"
+	id := 1
+]
+
+{ #category : 'helpers' }
 StackCollector >> popPendingAssignment: aStackTrace [
 	"Pop a PendingAssignment if the top of aStackTrace is after the pendingAssignment corresponding frame.
 	aStackTrace is the body of a StackTraceResponse"
@@ -235,6 +260,20 @@ StackCollector >> popPendingAssignment: aStackTrace [
 							 , topPendingAssignment targetExpression
 						 in: topFrameId) ].
 	^ assignment
+]
+
+{ #category : 'helpers' }
+StackCollector >> processCurrentStepInto: traces [
+
+	| hasEnteredNewCall currentFrameBody |
+	hasEnteredNewCall := clientDap hasEnteredNewCall.
+	currentFrameBody := clientDap currentFrameBody.
+
+	(self shouldSkipFrameBody: currentFrameBody)
+		ifTrue: [ clientDap stepOut ]
+		ifFalse: [
+				hasEnteredNewCall ifTrue: [ self addCallTraceTo: traces ].
+				self addAssignmentTraceFrom: currentFrameBody to: traces ]
 ]
 
 { #category : 'helpers' }
@@ -288,6 +327,17 @@ StackCollector >> pushPendingAssignment: aStackTrace [
 									objectExpression: '' ].
 
 					pendingAssignmentsStack push: pendingAssignment ] ]
+]
+
+{ #category : 'helpers' }
+StackCollector >> shouldSkipFrameBody: currentFrameBody [
+
+	| path |
+	path := (currentFrameBody at: 'stackFrames') first
+		        at: 'source'
+		        at: 'path'.
+
+	^ path includesSubstring: 'runpy.py'
 ]
 
 { #category : 'helpers' }

@@ -1,18 +1,93 @@
 Class {
 	#name : 'AssignmentCollectorTest',
-	#superclass : 'TestCase',
+	#superclass : 'ParametrizedTestCase',
 	#instVars : [
-		'assignmentCollector'
+		'assignmentCollector',
+		'line',
+		'expectedResult'
 	],
 	#category : 'StackCollector-Tests',
 	#package : 'StackCollector-Tests'
 }
+
+{ #category : 'building suites' }
+AssignmentCollectorTest class >> testParameters [
+
+	^ ParametrizedTestMatrix new
+		  addCase: {
+				  (#line -> 'obj.foo = bar').
+				  (#expectedResult -> #( 'obj.foo' )) };
+		  addCase: {
+				  (#line -> 'x += 1').
+				  (#expectedResult -> #( 'x' )) };
+		  addCase: {
+				  (#line -> 'a = b = c = d').
+				  (#expectedResult -> #( 'a' 'b' 'c' )) };
+		  addCase: {
+				  (#line -> '(a, (b, c)) = x').
+				  (#expectedResult -> #( 'a' 'b' 'c' )) };
+		  addCase: {
+				  (#line -> '(a, b): tuple[int, int] = x').
+				  (#expectedResult -> #( 'a' 'b' )) };
+		  addCase: {
+				  (#line -> '[a, b] = x').
+				  (#expectedResult -> #( 'a' 'b' )) };
+		  addCase: {
+				  (#line -> 'a, b, c, d, e, f = 1, 2, 3, 4, 5, 6').
+				  (#expectedResult -> #( 'a' 'b' 'c' 'd' 'e' 'f' )) };
+		  addCase: {
+				  (#line -> 'x = 1; y = 2').
+				  (#expectedResult -> #( 'x' 'y' )) };
+		  addCase: {
+				  (#line -> 'print(x)').
+				  (#expectedResult -> #(  )) };
+		  addCase: {
+				  (#line -> 'x = 1').
+				  (#expectedResult -> #( 'x' )) };
+		  addCase: {
+				  (#line -> 'a, *rest = x').
+				  (#expectedResult -> #( 'a' 'rest' )) };
+		  addCase: {
+				  (#line -> 'arr[0] = 1').
+				  (#expectedResult -> #( 'arr[0]' )) };
+		  addCase: {
+				  (#line -> 'a, b = 1, 2').
+				  (#expectedResult -> #( 'a' 'b' )) };
+		  addCase: {
+				  (#line -> 'x: int = 1').
+				  (#expectedResult -> #( 'x' )) };
+		  yourself
+]
+
+{ #category : 'accessing' }
+AssignmentCollectorTest >> expectedResult [
+
+	^ expectedResult
+]
+
+{ #category : 'accessing' }
+AssignmentCollectorTest >> expectedResult: aCollection [
+
+	expectedResult := aCollection
+]
 
 { #category : 'initialization' }
 AssignmentCollectorTest >> initialize [
 	"We ensure the installation of the library before running the tests because it could cause a time limit to fails for the test installing the libraries."
 
 	TSLibrariesPython new ensurePythonLibraryExists
+]
+
+{ #category : 'accessing' }
+AssignmentCollectorTest >> line [
+	
+	^ line
+]
+
+{ #category : 'accessing' }
+AssignmentCollectorTest >> line: aString [
+
+	line := aString
 ]
 
 { #category : 'running' }
@@ -148,130 +223,9 @@ AssignmentCollectorTest >> testCollectAssignmentsFromNestedAssignments [
 ]
 
 { #category : 'tests' }
-AssignmentCollectorTest >> testGetAssignmentNameFromAttributeAssignment [
+AssignmentCollectorTest >> testGetAssignmentNameFromLine [
 
-	| result |
-	result := assignmentCollector getAssignmentNameFromLine: 'obj.foo = bar'.
-
-	self assert: result equals: { 'obj.foo' }
-]
-
-{ #category : 'tests' }
-AssignmentCollectorTest >> testGetAssignmentNameFromAugmentedAssignment [
-
-	| result |
-	result := assignmentCollector getAssignmentNameFromLine: 'x += 1'.
-
-	self assert: result equals: { 'x' }
-]
-
-{ #category : 'tests' }
-AssignmentCollectorTest >> testGetAssignmentNameFromChainedAssignment [
-
-	| result |
-	result := assignmentCollector getAssignmentNameFromLine:
-		          'a = b = c = d'.
-
-	self assert: result equals: { 'a'. 'b'. 'c' }
-]
-
-{ #category : 'tests' }
-AssignmentCollectorTest >> testGetAssignmentNameFromCompleTupleAssignment [
-
-	| result |
-	result := assignmentCollector getAssignmentNameFromLine:
-		          '(a, (b, c)) = x'.
-
-	self assert: result equals: { 'a'. 'b'. 'c' }
-]
-
-{ #category : 'tests' }
-AssignmentCollectorTest >> testGetAssignmentNameFromComplexTypedAssignment [
-
-	| result |
-	result := assignmentCollector getAssignmentNameFromLine: '(a, b): tuple[int, int] = x'.
-
-	self assert: result equals: { 'a' . 'b' }
-]
-
-{ #category : 'tests' }
-AssignmentCollectorTest >> testGetAssignmentNameFromListUnpacking [
-
-	| result |
-	result := assignmentCollector getAssignmentNameFromLine: '[a, b] = x'.
-
-	self assert: result equals: { 'a' . 'b' }
-]
-
-{ #category : 'tests' }
-AssignmentCollectorTest >> testGetAssignmentNameFromLongTupleAssignment [
-
-	| result |
-	result := assignmentCollector getAssignmentNameFromLine:
-		          'a, b, c, d, e, f = 1, 2, 3, 4, 5, 6'.
-
-	self assert: result equals: { 'a'. 'b'. 'c'. 'd'. 'e'. 'f' }
-]
-
-{ #category : 'tests' }
-AssignmentCollectorTest >> testGetAssignmentNameFromMultipleAssignments [
-
-	| result |
-	result := assignmentCollector getAssignmentNameFromLine: 'x = 1; y = 2'.
-
-	self assert: result equals: { 'x' . 'y' }
-]
-
-{ #category : 'tests' }
-AssignmentCollectorTest >> testGetAssignmentNameFromNoAssignment [
-
-	| result |
-	result := assignmentCollector getAssignmentNameFromLine: 'print(x)'.
-
-	self assert: result equals: { }
-]
-
-{ #category : 'tests' }
-AssignmentCollectorTest >> testGetAssignmentNameFromSimpleLine [
-
-	| result |
-	result := assignmentCollector getAssignmentNameFromLine: 'x = 1'.
-
-	self assert: result equals: { 'x' }
-]
-
-{ #category : 'tests' }
-AssignmentCollectorTest >> testGetAssignmentNameFromStarUnpacking [
-
-	| result |
-	result := assignmentCollector getAssignmentNameFromLine: 'a, *rest = x'.
-
-	self assert: result equals: { 'a' . 'rest' }
-]
-
-{ #category : 'tests' }
-AssignmentCollectorTest >> testGetAssignmentNameFromSubscriptAssignment [
-
-	| result |
-	result := assignmentCollector getAssignmentNameFromLine: 'arr[0] = 1'.
-
-	self assert: result equals: { 'arr[0]' }
-]
-
-{ #category : 'tests' }
-AssignmentCollectorTest >> testGetAssignmentNameFromTupleAssignment [
-
-	| result |
-	result := assignmentCollector getAssignmentNameFromLine: 'a, b = 1, 2'.
-
-	self assert: result equals: { 'a' . 'b' }
-]
-
-{ #category : 'tests' }
-AssignmentCollectorTest >> testGetAssignmentNameFromTypedAssignment [
-
-	| result |
-	result := assignmentCollector getAssignmentNameFromLine: 'x: int = 1'.
-
-	self assert: result equals: { 'x' }
+	self
+		assert: (assignmentCollector getAssignmentNameFromLine: line)
+		equals: expectedResult
 ]

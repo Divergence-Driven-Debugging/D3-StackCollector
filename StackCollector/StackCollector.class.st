@@ -9,7 +9,8 @@ Class {
 		'clientDap',
 		'id',
 		'assignmentCollector',
-		'fileLineCache'
+		'fileLineCache',
+		'pendingAssignmentsStack'
 	],
 	#category : 'StackCollector',
 	#package : 'StackCollector'
@@ -22,6 +23,37 @@ StackCollector class >> collectStackFrom: aDAPClient [
 	collector := self new clientDap: aDAPClient.
 
 	^ collector getExecutionTraces
+]
+
+{ #category : 'helpers' }
+StackCollector >> addAssignmentTraceFrom: currentFrameBody to: traces [
+
+	| assignment |
+	assignment := self popPendingAssignment: currentFrameBody.
+
+	assignment ifNotNil: [ traces add: assignment ].
+
+	self pushPendingAssignment: currentFrameBody
+]
+
+{ #category : 'helpers' }
+StackCollector >> addCallTraceTo: traces depth: aNumber [
+
+	traces addAll: (self currentCallTracesAtDepth: aNumber)
+]
+
+{ #category : 'helpers' }
+StackCollector >> argumentsForFrame: aReceiverFrame [
+
+	| variableReference |
+	variableReference := (clientDap scopesForFrame:
+		                      (aReceiverFrame at: 'id')) first at:
+		                     'variablesReference'.
+
+	^ (clientDap variablesForReference: variableReference)
+		  select: [ :each | (each at: 'type') isNotEmpty ]
+		  thenCollect: [ :each |
+			  self transformVariables: each with: (aReceiverFrame at: 'id') ]
 ]
 
 { #category : 'accessing' }
@@ -37,37 +69,33 @@ StackCollector >> clientDap: aDAPClient [
 ]
 
 { #category : 'helpers' }
-StackCollector >> getAssignmentFrom: aFrame [
-	"Returns the dictionnay corresponding to the assignment from a frame nil if it's not an assignment"
+StackCollector >> currentCallTracesAtDepth: aNumber [
 
-	| path line frameId name evalResponse |
-	path := aFrame at: 'source' at: 'path'.
-	line := aFrame at: 'line'.
-	frameId := aFrame at: 'id'.
+	| frames senderFrame receiverFrame arguments |
+	frames := clientDap stackFrames: clientDap mainThreadId.
+	senderFrame := frames second.
+	receiverFrame := frames first.
 
-	name := assignmentCollector getAssignmentNameFromLine:
-		        (fileLineCache getLine: line from: path asFileReference ).
+	arguments := self argumentsForFrame: receiverFrame.
+	
+	^ {
+		  (self
+			   getMessageFrom: receiverFrame
+			   and: senderFrame
+			   withArguments: arguments
+			   atDepth: aNumber).
+		  (self
+			   getMethodFrom: receiverFrame
+			   and: senderFrame
+			   atDepth: aNumber) }
+]
 
-	name ifNil: [ ^ nil ].
+{ #category : 'helpers' }
+StackCollector >> executedCodeForFrame: aFrame [
 
-	evalResponse := clientDap
-		                evaluate: name
-		                frameId: frameId
-		                onErrorDo: [ ^ nil ].
-	evalResponse at: 'evaluateName' put: name.
-
-	^ Dictionary new
-		  at: 'type' put: 'assignment';
-		  at: 'id' put: self id;
-		  at: 'object' put: nil;
-		  at: 'variable' put: name;
-		  at: 'old_value'
-		  put: (self hashVariable: evalResponse with: frameId);
-		  at: 'new_value' put: nil;
-		  at: 'executed_code' put: {
-				  ('file' -> path).
-				  ('line' -> line) } asDictionary;
-		  yourself
+	^ {
+		  ('file' -> (aFrame at: 'source' at: 'path')).
+		  ('line' -> (aFrame at: 'line')) } asDictionary
 ]
 
 { #category : 'accessing' }
@@ -77,44 +105,17 @@ StackCollector >> getExecutionTraces [
 	| traces |
 	traces := OrderedCollection new.
 
-	clientDap stackFrames: clientDap mainThreadId.
-	id := 1.
+	self initializeExecutionTracing.
 
-	clientDap stepUntil: [ false ] do: [
-			| assignment |
-			clientDap hasEnteredNewCall ifTrue: [
-					| message method frames senderFrame receiverFrame varRef vars arguments |
-					frames := clientDap stackFrames: clientDap mainThreadId.
-					senderFrame := frames second.
-					receiverFrame := frames first.
-
-					varRef := (clientDap scopesForFrame: (receiverFrame at: 'id'))
-						          first at: 'variablesReference'.
-
-					vars := clientDap variablesForReference: varRef.
-					arguments := vars collect: [ :dictionary |
-							             (dictionary at: 'type') = '' ifFalse: [
-								             self
-									             transformVariables: dictionary
-									             with: (receiverFrame at: 'id') ] ].
-
-					message := self
-						           getMessageFrom: receiverFrame
-						           and: senderFrame
-						           withArguments: arguments.
-
-					method := self getMethodFrom: receiverFrame and: senderFrame.
-
-					traces add: message.
-					traces add: method ].
-			assignment := self getAssignmentFrom: clientDap currentFrame.
-			assignment ifNotNil: [ traces add: assignment ] ].
+	clientDap
+		stepUntil: [ false ]
+		do: [ self processCurrentStepInto: traces ].
 
 	^ traces
 ]
 
 { #category : 'helpers' }
-StackCollector >> getMessageFrom: aReceiverFrame and: aSenderFrame withArguments: aCollectionOfVariables [
+StackCollector >> getMessageFrom: aReceiverFrame and: aSenderFrame withArguments: aCollectionOfVariables atDepth: aNumber [
 	"Returns the dictionnay corresponding to the message call from a sender to a receiver"
 
 	^ Dictionary new
@@ -123,39 +124,60 @@ StackCollector >> getMessageFrom: aReceiverFrame and: aSenderFrame withArguments
 		  at: 'message_name' put: (aReceiverFrame at: 'name');
 		  at: 'sender'
 		  put:
-			  (self
-				   hashVariable: clientDap sender
-				   with: (aSenderFrame at: 'id'));
+			  (self hashVariable: clientDap sender in: (aSenderFrame at: 'id'));
 		  at: 'receiver'
 		  put:
 			  (self
 				   hashVariable: clientDap receiver
-				   with: (aReceiverFrame at: 'id'));
+				   in: (aReceiverFrame at: 'id'));
 		  at: 'args' put: aCollectionOfVariables;
-		  at: 'executed_code' put: {
-				  ('file' -> (aSenderFrame at: 'source' at: 'path')).
-				  ('line' -> (aSenderFrame at: 'line')) } asDictionary;
+		  at: 'executed_code'
+		  put: (self executedCodeForFrame: aSenderFrame);
+		  at: 'depth' put: aNumber;
 		  yourself
 ]
 
 { #category : 'helpers' }
-StackCollector >> getMethodFrom: aReceiverFrame and: aSenderFrame [
+StackCollector >> getMethodFrom: aReceiverFrame and: aSenderFrame atDepth: aNumber [
 	"Returns the dictionnay corresponding to the method from a receiver"
 
 	^ Dictionary new
 		  at: 'type' put: 'method';
 		  at: 'id' put: self id;
-		  at: 'sender' put: (self hashVariable: clientDap sender with: (aSenderFrame at: 'id'));
-		  at: 'receiver' put: (self hashVariable: clientDap receiver with: (aReceiverFrame at: 'id'));
+		  at: 'sender'
+		  put:
+			  (self hashVariable: clientDap sender in: (aSenderFrame at: 'id'));
+		  at: 'receiver'
+		  put:
+			  (self
+				   hashVariable: clientDap receiver
+				   in: (aReceiverFrame at: 'id'));
 		  at: 'method_name' put: (aReceiverFrame at: 'name');
-		  at: 'executed_code' put: {
-				  ('file' -> (aReceiverFrame at: 'source' at: 'path')).
-				  ('line' -> (aReceiverFrame at: 'line')) } asDictionary;
+		  at: 'executed_code'
+		  put: (self executedCodeForFrame: aReceiverFrame);
+		  at: 'depth' put: aNumber;
 		  yourself
 ]
 
 { #category : 'helpers' }
-StackCollector >> hashVariable: aDictionary with: aReceiverFrameId [
+StackCollector >> hashExpression: aString in: aFrameId [
+	"Tranforms a dap Variable to the expected argument format"
+
+	| evalResponse |
+	evalResponse := clientDap
+		                evaluate: aString
+		                frameId: aFrameId
+		                onErrorDo: [ ^ nil ].
+		
+	evalResponse
+		at: 'evaluateName'
+		put: aString.
+		
+	^ self hashVariable: evalResponse in: aFrameId
+]
+
+{ #category : 'helpers' }
+StackCollector >> hashVariable: aDictionary in: aReceiverFrameId [
 	"Tranforms a dap Variable to the expected argument format"
 
 	aDictionary ifNil: [ ^ nil ].
@@ -175,6 +197,7 @@ StackCollector >> hashVariable: aDictionary with: aReceiverFrameId [
 
 { #category : 'accessing' }
 StackCollector >> id [
+	"Returns the current unique identifier and increments it for the next use."
 
 	| result |
 	result := id.
@@ -182,7 +205,7 @@ StackCollector >> id [
 	^ result
 ]
 
-{ #category : 'helpers' }
+{ #category : 'initialization' }
 StackCollector >> initialize [
 
 	| parser pythonLanguage |
@@ -192,9 +215,139 @@ StackCollector >> initialize [
 	parser := TSParser new.
 	pythonLanguage := TSLanguage python.
 	parser language: pythonLanguage.
-
 	assignmentCollector parser: parser.
-	fileLineCache := FileLineCache new
+	fileLineCache := FileLineCache new.
+	pendingAssignmentsStack := Stack new
+]
+
+{ #category : 'helpers' }
+StackCollector >> initializeExecutionTracing [
+
+	clientDap initializeDapRegistry.
+	clientDap stackFrames: clientDap mainThreadId. "Need one stacktrace request for clientDap hasEnteredNewCall"
+	id := 1
+]
+
+{ #category : 'helpers' }
+StackCollector >> popPendingAssignment: aStackTrace [
+	"Pop a PendingAssignment if the top of aStackTrace is after the pendingAssignment corresponding frame.
+	aStackTrace is the body of a StackTraceResponse"
+
+	| topPendingAssignment topFrameId assignment |
+	pendingAssignmentsStack isEmpty ifTrue: [ ^ nil ].
+
+	topPendingAssignment := pendingAssignmentsStack top.
+
+	(topPendingAssignment hasBeenPassedBy: aStackTrace) ifFalse: [ ^ nil ].
+	topFrameId := (aStackTrace at: 'stackFrames') first at: 'id'.
+	pendingAssignmentsStack pop.
+
+	assignment := Dictionary new
+		              at: 'type' put: 'assignment';
+		              at: 'id' put: self id;
+		              at: 'object' put: topPendingAssignment object;
+		              at: 'variable'
+		              put: topPendingAssignment targetExpression;
+		              at: 'old_value' put: topPendingAssignment oldValue;
+		              at: 'executed_code' put: {
+				              ('file' -> topPendingAssignment filepath).
+				              ('line' -> topPendingAssignment lineNumber) }
+				              asDictionary;
+		              at: 'depth' put: topPendingAssignment stackDepth;
+		              yourself.
+
+	topPendingAssignment object
+		ifNil: [
+				assignment at: 'new_value' put: (self
+						 hashExpression: topPendingAssignment targetExpression
+						 in: topFrameId) ]
+		ifNotNil: [
+				assignment at: 'new_value' put: (self
+						 hashExpression: topPendingAssignment objectExpression , '.'
+							 , topPendingAssignment targetExpression
+						 in: topFrameId) ].
+	^ assignment
+]
+
+{ #category : 'helpers' }
+StackCollector >> processCurrentStepInto: traces [
+
+	| hasEnteredNewCall currentFrameBody |
+	hasEnteredNewCall := clientDap hasEnteredNewCall.
+	currentFrameBody := clientDap currentFrameBody.
+
+	(self shouldSkipFrameBody: currentFrameBody)
+		ifTrue: [ clientDap stepOut ]
+		ifFalse: [
+				hasEnteredNewCall ifTrue: [
+						self
+							addCallTraceTo: traces
+							depth: (currentFrameBody at: 'totalFrames') ].
+				self addAssignmentTraceFrom: currentFrameBody to: traces ]
+]
+
+{ #category : 'helpers' }
+StackCollector >> pushPendingAssignment: aStackTrace [
+	"Push a PendingAssignment if the top of aStackTrace is an assignments.
+	aStackTrace is the body of a StackTraceResponse"
+
+	| topFrame path line frameId names depth top |
+	topFrame := (aStackTrace at: 'stackFrames') first.
+	path := topFrame at: 'source' at: 'path'.
+	line := topFrame at: 'line'.
+	frameId := topFrame at: 'id'.
+	depth := aStackTrace at: 'totalFrames'.
+
+	names := assignmentCollector getAssignmentNameFromLine:
+		         (fileLineCache getLine: line from: path asFileReference).
+
+	top := pendingAssignmentsStack isEmpty
+		       ifTrue: [ nil ]
+		       ifFalse: [ pendingAssignmentsStack top ].
+
+	names do: [ :name |
+			(top isNil or: [ top targetExpression ~= name ]) ifTrue: [
+					| pendingAssignment split |
+					pendingAssignment := PendingAssignment new
+						                     oldValue:
+							                     (self hashExpression: name in: frameId);
+						                     stackDepth: depth;
+						                     lineNumber: line;
+						                     filepath: path.
+
+					split := name splitOnFirst: $..
+
+					split second isEmpty
+						ifFalse: [
+								| key this objExpr |
+								self flag: 'move this to clientDAP backend'.
+								this := split first.
+								key := clientDap backend generateKey.
+								clientDap backend store: key forExpression: this.
+								objExpr := clientDap backend readExpressionForKey: key.
+
+								pendingAssignment
+									object: (self hashExpression: this in: frameId);
+									targetExpression: split last;
+									objectExpression: objExpr ]
+						ifTrue: [
+								pendingAssignment
+									object: nil;
+									targetExpression: name;
+									objectExpression: '' ].
+
+					pendingAssignmentsStack push: pendingAssignment ] ]
+]
+
+{ #category : 'helpers' }
+StackCollector >> shouldSkipFrameBody: currentFrameBody [
+
+	| path |
+	path := (currentFrameBody at: 'stackFrames') first
+		        at: 'source'
+		        at: 'path'.
+
+	^ path includesSubstring: 'runpy.py'
 ]
 
 { #category : 'helpers' }
@@ -204,6 +357,6 @@ StackCollector >> transformVariables: aDictionary with: aReceiverFrameId [
 	^ Dictionary new
 		  at: 'name' put: (aDictionary at: 'name');
 		  at: 'value'
-		  put: (self hashVariable: aDictionary with: aReceiverFrameId);
+		  put: (self hashVariable: aDictionary in: aReceiverFrameId);
 		  yourself
 ]

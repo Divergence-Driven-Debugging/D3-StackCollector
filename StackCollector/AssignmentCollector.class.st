@@ -1,3 +1,8 @@
+"
+I extract assignment variable names from source code lines using a Tree-sitter parser.
+
+I analyze a single line of source text, locate assignment nodes and answer the name of the assigned variable when an assignment is present. Both standard assignments and augmented assignments are supported.
+"
 Class {
 	#name : 'AssignmentCollector',
 	#superclass : 'Object',
@@ -8,35 +13,62 @@ Class {
 	#package : 'StackCollector'
 }
 
-{ #category : 'accessing' }
-AssignmentCollector >> getAssignmentNameFromLine: aString [
+{ #category : 'private - accessing' }
+AssignmentCollector >> collectAssignmentTargetsFrom: aNode source: source into: assignments [
+	"Recursively collect assignment targets from the left-hand
+	side of an assignment expression."
 
-	| root assignmentNode left |
-	root := (parser parseString: aString) rootNode.
-	assignmentNode := self getAssignmentNodeFrom: root.
+	(#( 'identifier' 'attribute' 'subscript' ) includes: aNode type)
+		ifTrue: [
+				assignments add: (aNode textFromSourceText: source).
+				^ self ].
 
-	assignmentNode ifNil: [ ^ nil ].
-
-	left := assignmentNode firstNamedChild.
-
-	^ left textFromSourceText: aString
+	"Traverse child nodes to find nested targets."
+	aNode namedChildren do: [ :child |
+			self
+				collectAssignmentTargetsFrom: child
+				source: source
+				into: assignments ]
 ]
 
-{ #category : 'helper' }
-AssignmentCollector >> getAssignmentNodeFrom: aTree [
-	"Return the assignment TSNode found in aTree.
-	Return nil if none is found."
+{ #category : 'private - accessing' }
+AssignmentCollector >> collectAssignmentsFrom: aNode source: source into: assignments [
+	"Recursively traverse the AST and collect assignment targets
+	from assignment and augmented assignment nodes."
 
-	| node |
-	node := aTree firstNamedChild.
-	node isNull ifTrue: [ ^ nil ].
+	(#( 'assignment' 'augmented_assignment' ) includes: aNode type)
+		ifTrue: [
+				| left |
+				left := aNode nodeChildByFieldName: 'left'.
 
-	node := node firstNamedChild.
-	node isNull ifTrue: [ ^ nil ].
-	(#( 'assignment' 'augmented_assignment' ) includes: node type)
-		ifFalse: [ ^ nil ].
+				left ifNotNil: [
+						self
+							collectAssignmentTargetsFrom: left
+							source: source
+							into: assignments ] ].
 
-	^ node
+	"Continue traversal on child nodes."
+	aNode namedChildren do: [ :child |
+		self collectAssignmentsFrom: child source: source into: assignments ]
+]
+
+{ #category : 'accessing' }
+AssignmentCollector >> getAssignmentNameFromLine: aString [
+	
+	"Return an Array of string corresponding to the assignment target"
+	
+	| root assignments |
+	
+	root := (parser parseString: aString) rootNode.
+
+	assignments := OrderedCollection new.
+
+	self
+		collectAssignmentsFrom: root
+		source: aString
+		into: assignments.
+
+	^ assignments asArray
 ]
 
 { #category : 'accessing' }

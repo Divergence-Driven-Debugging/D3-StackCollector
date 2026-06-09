@@ -28,6 +28,126 @@ AssignmentCollectorTest >> setUp [
 ]
 
 { #category : 'tests' }
+AssignmentCollectorTest >> testCollectAssignmentTargetsFromIdentifier [
+
+	| node assignments |
+	node := MockTSNode new
+		        type: 'identifier';
+		        text: 'foo'.
+
+	assignments := OrderedCollection new.
+
+	assignmentCollector
+		collectAssignmentTargetsFrom: node
+		source: ''
+		into: assignments.
+
+	self assert: assignments asArray equals: #( 'foo' )
+]
+
+{ #category : 'tests' }
+AssignmentCollectorTest >> testCollectAssignmentTargetsFromNestedTargets [
+
+	| root a b c assignments |
+	a := MockTSNode new
+		     type: 'identifier';
+		     text: 'a';
+		     yourself.
+
+	b := MockTSNode new
+		     type: 'identifier';
+		     text: 'b';
+		     yourself.
+
+	c := MockTSNode new
+		     type: 'identifier';
+		     text: 'c';
+		     yourself.
+
+	root := MockTSNode new
+		        type: 'tuple';
+		        namedChildren: {
+				        a.
+				        b.
+				        c };
+		        yourself.
+
+	assignments := OrderedCollection new.
+
+	assignmentCollector
+		collectAssignmentTargetsFrom: root
+		source: ''
+		into: assignments.
+
+	self assert: assignments asArray equals: #( 'a' 'b' 'c' )
+]
+
+{ #category : 'tests' }
+AssignmentCollectorTest >> testCollectAssignmentsFromAssignmentNode [
+
+	| left assignmentNode assignments |
+	left := MockTSNode new
+		        type: 'identifier';
+		        text: 'foo';
+		        yourself.
+
+	assignmentNode := MockTSNode new
+		                  type: 'assignment';
+		                  leftNode: left;
+		                  yourself.
+
+	assignments := OrderedCollection new.
+
+	assignmentCollector
+		collectAssignmentsFrom: assignmentNode
+		source: ''
+		into: assignments.
+
+	self assert: assignments asArray equals: #( 'foo' )
+]
+
+{ #category : 'tests' }
+AssignmentCollectorTest >> testCollectAssignmentsFromNestedAssignments [
+
+	| left1 left2 assignment1 assignment2 root assignments |
+	left1 := MockTSNode new
+		         type: 'identifier';
+		         text: 'foo';
+		         yourself.
+
+	left2 := MockTSNode new
+		         type: 'identifier';
+		         text: 'bar';
+		         yourself.
+
+	assignment1 := MockTSNode new
+		               type: 'assignment';
+		               leftNode: left1;
+		               yourself.
+
+	assignment2 := MockTSNode new
+		               type: 'augmented_assignment';
+		               leftNode: left2;
+		               yourself.
+
+	root := MockTSNode new
+		        type: 'module';
+		        namedChildren: {
+				        assignment1.
+				        assignment2 };
+		        yourself.
+
+	assignments := OrderedCollection new.
+
+	assignmentCollector
+		collectAssignmentsFrom: root
+		source: ''
+		into: assignments.
+
+	self assert: assignments asArray equals: #( 'foo' 'bar' )
+]
+
+{ #category : 'tests' }
 AssignmentCollectorTest >> testGetAssignmentNameFromAttributeAssignment [
 
 	| result |

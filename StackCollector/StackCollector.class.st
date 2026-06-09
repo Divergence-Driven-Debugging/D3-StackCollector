@@ -37,9 +37,9 @@ StackCollector >> addAssignmentTraceFrom: currentFrameBody to: traces [
 ]
 
 { #category : 'helpers' }
-StackCollector >> addCallTraceTo: traces [
+StackCollector >> addCallTraceTo: traces depth: aNumber [
 
-	traces addAll: self currentCallTraces
+	traces addAll: (self currentCallTracesAtDepth: aNumber)
 ]
 
 { #category : 'helpers' }
@@ -69,7 +69,7 @@ StackCollector >> clientDap: aDAPClient [
 ]
 
 { #category : 'helpers' }
-StackCollector >> currentCallTraces [
+StackCollector >> currentCallTracesAtDepth: aNumber [
 
 	| frames senderFrame receiverFrame arguments |
 	frames := clientDap stackFrames: clientDap mainThreadId.
@@ -77,13 +77,17 @@ StackCollector >> currentCallTraces [
 	receiverFrame := frames first.
 
 	arguments := self argumentsForFrame: receiverFrame.
-
+	
 	^ {
 		  (self
 			   getMessageFrom: receiverFrame
 			   and: senderFrame
-			   withArguments: arguments).
-		  (self getMethodFrom: receiverFrame and: senderFrame) }
+			   withArguments: arguments
+			   atDepth: aNumber).
+		  (self
+			   getMethodFrom: receiverFrame
+			   and: senderFrame
+			   atDepth: aNumber) }
 ]
 
 { #category : 'helpers' }
@@ -111,7 +115,7 @@ StackCollector >> getExecutionTraces [
 ]
 
 { #category : 'helpers' }
-StackCollector >> getMessageFrom: aReceiverFrame and: aSenderFrame withArguments: aCollectionOfVariables [
+StackCollector >> getMessageFrom: aReceiverFrame and: aSenderFrame withArguments: aCollectionOfVariables atDepth: aNumber [
 	"Returns the dictionnay corresponding to the message call from a sender to a receiver"
 
 	^ Dictionary new
@@ -129,11 +133,12 @@ StackCollector >> getMessageFrom: aReceiverFrame and: aSenderFrame withArguments
 		  at: 'args' put: aCollectionOfVariables;
 		  at: 'executed_code'
 		  put: (self executedCodeForFrame: aSenderFrame);
+		  at: 'depth' put: aNumber;
 		  yourself
 ]
 
 { #category : 'helpers' }
-StackCollector >> getMethodFrom: aReceiverFrame and: aSenderFrame [
+StackCollector >> getMethodFrom: aReceiverFrame and: aSenderFrame atDepth: aNumber [
 	"Returns the dictionnay corresponding to the method from a receiver"
 
 	^ Dictionary new
@@ -150,6 +155,7 @@ StackCollector >> getMethodFrom: aReceiverFrame and: aSenderFrame [
 		  at: 'method_name' put: (aReceiverFrame at: 'name');
 		  at: 'executed_code'
 		  put: (self executedCodeForFrame: aReceiverFrame);
+		  at: 'depth' put: aNumber;
 		  yourself
 ]
 
@@ -247,6 +253,7 @@ StackCollector >> popPendingAssignment: aStackTrace [
 				              ('file' -> topPendingAssignment filepath).
 				              ('line' -> topPendingAssignment lineNumber) }
 				              asDictionary;
+		              at: 'depth' put: topPendingAssignment stackDepth;
 		              yourself.
 
 	topPendingAssignment object
@@ -272,7 +279,10 @@ StackCollector >> processCurrentStepInto: traces [
 	(self shouldSkipFrameBody: currentFrameBody)
 		ifTrue: [ clientDap stepOut ]
 		ifFalse: [
-				hasEnteredNewCall ifTrue: [ self addCallTraceTo: traces ].
+				hasEnteredNewCall ifTrue: [
+						self
+							addCallTraceTo: traces
+							depth: (currentFrameBody at: 'totalFrames') ].
 				self addAssignmentTraceFrom: currentFrameBody to: traces ]
 ]
 

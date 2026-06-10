@@ -1,25 +1,29 @@
 import sys
+from subprocess import run
 
-from setupJava import startJava
-from setupJs import startJs
-from setupPy import startPy
+def startPy(port: int):
+    run(['.env/bin/debugpy-adapter --port', port])
+
+def startJava(port: int):
+    pass
+    
+def startJs(port: int):
+    run(['node --dns-result-order=ipv4first js-debug/src/dapDebugServer.js', port])
+
 
 def main(argv: list[str]):
+    """
+    Script must be executed with `python setup.py [language] [port]`
+    """
 
-    if len(argv) < 3:
-        print('python setup.py [language] [path/to/source]')
-        sys.exit(1)
-
-    language, path = argv[1], argv[2]
+    language, port = argv[1], argv[2]
 
     if language.lower() == "py":
-        startPy(path)
+        startPy(port)
     elif language.lower() == "java":
-        startJava(path)
+        startJava(port)
     elif language.lower() == "js":
-        startJs(path)
+        startJs(port)
 
 if __name__ == "__main__":
-
-    # python setup.py [language] [path/to/source]
     main(sys.argv)

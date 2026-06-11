@@ -13,19 +13,9 @@ Metacello new
 	load
 ```
 
-Example for a python adapter listening to port 5678:
+Example for python:
 ```smalltalk
-client := DAPClientBuilder newSindarinClient
-	          port: 5678;
-	          adapterID: 'python';
-	          functionBreakpoint: 'main';
-	          attachArguments: {
-			          ('connect' -> {
-					           ('host' -> 'localhost').
-					           ('port' -> 5678) } asDictionary).
-			          ('justMyCode' -> false) } asDictionary;
-	          backend: DAPBackendPython new;
-	          startClientSession.
-
-res := StackCollector collectStackFrom: client.
+res := TraceCollector new
+	       collectFor: PythonLanguage new
+	       path: '/path/to/file/to/collect/execution.py'.
 ```

@@ -1,3 +1,13 @@
+"
+I represent a programming language supported by the trace collection framework.
+
+My subclasses are responsible for providing the language-specific
+configuration required to communicate through the Debug Adapter Protocol (DAP).
+
+Subclasses must implement:
+- `launchAdapterAtPort:` to start the appropriate DAP adapter,
+- `createClientFor:atPort:` to create and configure a DAP client for a given source file.
+"
 Class {
 	#name : 'SupportedLanguage',
 	#superclass : 'Object',

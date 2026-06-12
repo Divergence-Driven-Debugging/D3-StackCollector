@@ -53,6 +53,6 @@ TraceCollector >> collectFor: aSupportedLanguage path: aPath [
 
 { #category : 'accessing' }
 TraceCollector >> port [
-	
+	"Hard coded value for the adapter port"
 	^ 5678
 ]

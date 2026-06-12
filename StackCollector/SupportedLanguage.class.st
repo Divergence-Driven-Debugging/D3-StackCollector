@@ -17,12 +17,19 @@ Class {
 
 { #category : 'actions' }
 SupportedLanguage class >> createClientFor: aPath atPort: aNumber [
+	"Create a DAP client configured to debug the source located at aPath
+	through the adapter listening on aNumber.
+
+	Subclasses must provide a language-specific implementation."
 
 	^ self subclassResponsibility
 ]
 
 { #category : 'actions' }
 SupportedLanguage class >> launchAdapterAtPort: aNumber [
+	"Start the language-specific DAP adapter configured to accept connections on port aNumber.
+
+	Subclasses must implement the adapter startup procedure."
 
 	^ self subclassResponsibility
 ]

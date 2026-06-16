@@ -10,7 +10,8 @@ Class {
 		'id',
 		'assignmentCollector',
 		'fileLineCache',
-		'pendingAssignmentsStack'
+		'pendingAssignmentsStack',
+		'supportedLanguage'
 	],
 	#category : 'StackCollector',
 	#package : 'StackCollector'
@@ -23,6 +24,15 @@ DAPTraceCollector class >> collectStackFrom: aDAPClient [
 	collector := self new clientDap: aDAPClient.
 
 	^ collector getExecutionTraces
+]
+
+{ #category : 'initialization' }
+DAPTraceCollector class >> collectStackWithoutAssignmentsFrom: aDAPClient [ 
+
+	| collector |
+	collector := self new clientDap: aDAPClient.
+
+	^ collector getExecutionTracesWithoutAssignments
 ]
 
 { #category : 'helpers' }
@@ -114,6 +124,21 @@ DAPTraceCollector >> getExecutionTraces [
 	^ traces
 ]
 
+{ #category : 'accessing' }
+DAPTraceCollector >> getExecutionTracesWithoutAssignments [
+	"Return the execution trace from the dap client connected to a debugger"
+
+	| traces |
+	traces := OrderedCollection new.
+
+	self initializeExecutionTracing.
+
+	clientDap stepUntil: [ false ] do: [
+			self processCurrentWithoutAssignmentStepInto: traces ].
+
+	^ traces
+]
+
 { #category : 'helpers' }
 DAPTraceCollector >> getMessageFrom: aReceiverFrame and: aSenderFrame withArguments: aCollectionOfVariables atDepth: aNumber [
 	"Returns the dictionnay corresponding to the message call from a sender to a receiver"
@@ -186,7 +211,9 @@ DAPTraceCollector >> hashVariable: aDictionary in: aReceiverFrameId [
 		  at: 'class'
 		  put: (aDictionary at: 'type' ifAbsent: 'Class Unknown');
 		  at: 'hash' put: ((clientDap
-				    evaluate: 'id(' , (aDictionary at: 'evaluateName') , ')'
+				    evaluate:
+					    (clientDap backend hashExpressionFor:
+							     (aDictionary at: 'evaluateName'))
 				    frameId: aReceiverFrameId
 				    onErrorDo: [
 						    Dictionary new
@@ -287,6 +314,22 @@ DAPTraceCollector >> processCurrentStepInto: traces [
 ]
 
 { #category : 'helpers' }
+DAPTraceCollector >> processCurrentWithoutAssignmentStepInto: traces [
+
+	| hasEnteredNewCall currentFrameBody |
+	hasEnteredNewCall := clientDap hasEnteredNewCall.
+	currentFrameBody := clientDap currentFrameBody.
+
+	(self shouldSkipFrameBody: currentFrameBody)
+		ifTrue: [ clientDap stepOut ]
+		ifFalse: [
+				hasEnteredNewCall ifTrue: [
+						self
+							addCallTraceTo: traces
+							depth: (currentFrameBody at: 'totalFrames') ] ]
+]
+
+{ #category : 'helpers' }
 DAPTraceCollector >> pushPendingAssignment: aStackTrace [
 	"Push a PendingAssignment if the top of aStackTrace is an assignments.
 	aStackTrace is the body of a StackTraceResponse"
@@ -342,12 +385,19 @@ DAPTraceCollector >> pushPendingAssignment: aStackTrace [
 { #category : 'helpers' }
 DAPTraceCollector >> shouldSkipFrameBody: currentFrameBody [
 
-	| path |
-	path := (currentFrameBody at: 'stackFrames') first
-		        at: 'source'
-		        at: 'path'.
+	| currentFrame path |
+	currentFrame := (currentFrameBody at: 'stackFrames') first.
 
-	^ path includesSubstring: 'runpy.py'
+	path := currentFrame at: 'source' at: 'path' ifAbsent: [ ^ true ].
+
+	^ (path includesSubstring: 'runpy.py') or: [
+		  path includesSubstring: 'JavaVirtualMachines' ]
+]
+
+{ #category : 'accessing' }
+DAPTraceCollector >> supportedLanguage: aSupportedLanguage [
+
+	supportedLanguage := aSupportedLanguage 
 ]
 
 { #category : 'helpers' }

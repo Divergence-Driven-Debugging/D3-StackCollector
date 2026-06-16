@@ -51,8 +51,35 @@ TraceCollector >> collectFor: aSupportedLanguage path: aPath [
 	^ res
 ]
 
+{ #category : 'collect' }
+TraceCollector >> collectWithoutAssignmentFor: aSupportedLanguage path: aPath [
+	"Collect the execution trace of the program located at
+    aPath using aSupportedLanguage.
+
+    This method starts the corresponding DAP adapter, waits for it to
+    become available, creates a DAP client, waits for the connection
+    to be established, collects the execution trace, and finally
+    closes the client connection."
+
+	| clientDAP res |
+	aSupportedLanguage launchAdapterAtPort: self port.
+
+	1 seconds asDuration wait.
+
+	clientDAP := aSupportedLanguage
+		             createClientFor: aPath
+		             atPort: self port.
+
+	1 seconds asDuration wait.
+
+	res := (DAPTraceCollector collectStackWithoutAssignmentsFrom:
+		        clientDAP) asArray.
+	clientDAP closeConnection.
+	^ res
+]
+
 { #category : 'accessing' }
 TraceCollector >> port [
 	"Hard coded value for the adapter port"
-	^ 5678
+	^ 5679
 ]

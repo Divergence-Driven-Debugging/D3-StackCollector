@@ -3,7 +3,7 @@ I am collecting the execution traces from an executing programme
 https://github.com/RemiDufloer/Trace-Model-Design
 "
 Class {
-	#name : 'StackCollector',
+	#name : 'DAPTraceCollector',
 	#superclass : 'Object',
 	#instVars : [
 		'clientDap',
@@ -17,7 +17,7 @@ Class {
 }
 
 { #category : 'initialization' }
-StackCollector class >> collectStackFrom: aDAPClient [
+DAPTraceCollector class >> collectStackFrom: aDAPClient [
 
 	| collector |
 	collector := self new clientDap: aDAPClient.
@@ -26,7 +26,7 @@ StackCollector class >> collectStackFrom: aDAPClient [
 ]
 
 { #category : 'helpers' }
-StackCollector >> addAssignmentTraceFrom: currentFrameBody to: traces [
+DAPTraceCollector >> addAssignmentTraceFrom: currentFrameBody to: traces [
 
 	| assignment |
 	assignment := self popPendingAssignment: currentFrameBody.
@@ -37,13 +37,13 @@ StackCollector >> addAssignmentTraceFrom: currentFrameBody to: traces [
 ]
 
 { #category : 'helpers' }
-StackCollector >> addCallTraceTo: traces depth: aNumber [
+DAPTraceCollector >> addCallTraceTo: traces depth: aNumber [
 
 	traces addAll: (self currentCallTracesAtDepth: aNumber)
 ]
 
 { #category : 'helpers' }
-StackCollector >> argumentsForFrame: aReceiverFrame [
+DAPTraceCollector >> argumentsForFrame: aReceiverFrame [
 
 	| variableReference |
 	variableReference := (clientDap scopesForFrame:
@@ -57,19 +57,19 @@ StackCollector >> argumentsForFrame: aReceiverFrame [
 ]
 
 { #category : 'accessing' }
-StackCollector >> clientDap [
+DAPTraceCollector >> clientDap [
 
 	^ clientDap
 ]
 
 { #category : 'accessing' }
-StackCollector >> clientDap: aDAPClient [
+DAPTraceCollector >> clientDap: aDAPClient [
 
 	clientDap := aDAPClient
 ]
 
 { #category : 'helpers' }
-StackCollector >> currentCallTracesAtDepth: aNumber [
+DAPTraceCollector >> currentCallTracesAtDepth: aNumber [
 
 	| frames senderFrame receiverFrame arguments |
 	frames := clientDap stackFrames: clientDap mainThreadId.
@@ -91,7 +91,7 @@ StackCollector >> currentCallTracesAtDepth: aNumber [
 ]
 
 { #category : 'helpers' }
-StackCollector >> executedCodeForFrame: aFrame [
+DAPTraceCollector >> executedCodeForFrame: aFrame [
 
 	^ {
 		  ('file' -> (aFrame at: 'source' at: 'path')).
@@ -99,7 +99,7 @@ StackCollector >> executedCodeForFrame: aFrame [
 ]
 
 { #category : 'accessing' }
-StackCollector >> getExecutionTraces [
+DAPTraceCollector >> getExecutionTraces [
 	"Return the execution trace from the dap client connected to a debugger"
 
 	| traces |
@@ -115,7 +115,7 @@ StackCollector >> getExecutionTraces [
 ]
 
 { #category : 'helpers' }
-StackCollector >> getMessageFrom: aReceiverFrame and: aSenderFrame withArguments: aCollectionOfVariables atDepth: aNumber [
+DAPTraceCollector >> getMessageFrom: aReceiverFrame and: aSenderFrame withArguments: aCollectionOfVariables atDepth: aNumber [
 	"Returns the dictionnay corresponding to the message call from a sender to a receiver"
 
 	^ Dictionary new
@@ -138,7 +138,7 @@ StackCollector >> getMessageFrom: aReceiverFrame and: aSenderFrame withArguments
 ]
 
 { #category : 'helpers' }
-StackCollector >> getMethodFrom: aReceiverFrame and: aSenderFrame atDepth: aNumber [
+DAPTraceCollector >> getMethodFrom: aReceiverFrame and: aSenderFrame atDepth: aNumber [
 	"Returns the dictionnay corresponding to the method from a receiver"
 
 	^ Dictionary new
@@ -160,7 +160,7 @@ StackCollector >> getMethodFrom: aReceiverFrame and: aSenderFrame atDepth: aNumb
 ]
 
 { #category : 'helpers' }
-StackCollector >> hashExpression: aString in: aFrameId [
+DAPTraceCollector >> hashExpression: aString in: aFrameId [
 	"Tranforms a dap Variable to the expected argument format"
 
 	| evalResponse |
@@ -177,7 +177,7 @@ StackCollector >> hashExpression: aString in: aFrameId [
 ]
 
 { #category : 'helpers' }
-StackCollector >> hashVariable: aDictionary in: aReceiverFrameId [
+DAPTraceCollector >> hashVariable: aDictionary in: aReceiverFrameId [
 	"Tranforms a dap Variable to the expected argument format"
 
 	aDictionary ifNil: [ ^ nil ].
@@ -196,7 +196,7 @@ StackCollector >> hashVariable: aDictionary in: aReceiverFrameId [
 ]
 
 { #category : 'accessing' }
-StackCollector >> id [
+DAPTraceCollector >> id [
 	"Returns the current unique identifier and increments it for the next use."
 
 	| result |
@@ -206,7 +206,7 @@ StackCollector >> id [
 ]
 
 { #category : 'initialization' }
-StackCollector >> initialize [
+DAPTraceCollector >> initialize [
 
 	| parser pythonLanguage |
 	super initialize.
@@ -221,7 +221,7 @@ StackCollector >> initialize [
 ]
 
 { #category : 'helpers' }
-StackCollector >> initializeExecutionTracing [
+DAPTraceCollector >> initializeExecutionTracing [
 
 	clientDap initializeDapRegistry.
 	clientDap stackFrames: clientDap mainThreadId. "Need one stacktrace request for clientDap hasEnteredNewCall"
@@ -229,7 +229,7 @@ StackCollector >> initializeExecutionTracing [
 ]
 
 { #category : 'helpers' }
-StackCollector >> popPendingAssignment: aStackTrace [
+DAPTraceCollector >> popPendingAssignment: aStackTrace [
 	"Pop a PendingAssignment if the top of aStackTrace is after the pendingAssignment corresponding frame.
 	aStackTrace is the body of a StackTraceResponse"
 
@@ -270,7 +270,7 @@ StackCollector >> popPendingAssignment: aStackTrace [
 ]
 
 { #category : 'helpers' }
-StackCollector >> processCurrentStepInto: traces [
+DAPTraceCollector >> processCurrentStepInto: traces [
 
 	| hasEnteredNewCall currentFrameBody |
 	hasEnteredNewCall := clientDap hasEnteredNewCall.
@@ -287,7 +287,7 @@ StackCollector >> processCurrentStepInto: traces [
 ]
 
 { #category : 'helpers' }
-StackCollector >> pushPendingAssignment: aStackTrace [
+DAPTraceCollector >> pushPendingAssignment: aStackTrace [
 	"Push a PendingAssignment if the top of aStackTrace is an assignments.
 	aStackTrace is the body of a StackTraceResponse"
 
@@ -340,7 +340,7 @@ StackCollector >> pushPendingAssignment: aStackTrace [
 ]
 
 { #category : 'helpers' }
-StackCollector >> shouldSkipFrameBody: currentFrameBody [
+DAPTraceCollector >> shouldSkipFrameBody: currentFrameBody [
 
 	| path |
 	path := (currentFrameBody at: 'stackFrames') first
@@ -351,7 +351,7 @@ StackCollector >> shouldSkipFrameBody: currentFrameBody [
 ]
 
 { #category : 'helpers' }
-StackCollector >> transformVariables: aDictionary with: aReceiverFrameId [
+DAPTraceCollector >> transformVariables: aDictionary with: aReceiverFrameId [
 	"Tranforms a dap Variable to the expected argument format"
 
 	^ Dictionary new

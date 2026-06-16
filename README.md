@@ -13,19 +13,31 @@ Metacello new
 	load
 ```
 
-Example for a python adapter listening to port 5678:
+Example for python:
 ```smalltalk
-client := DAPClientBuilder newSindarinClient
-	          port: 5678;
-	          adapterID: 'python';
-	          functionBreakpoint: 'main';
-	          attachArguments: {
-			          ('connect' -> {
-					           ('host' -> 'localhost').
-					           ('port' -> 5678) } asDictionary).
-			          ('justMyCode' -> false) } asDictionary;
-	          backend: DAPBackendPython new;
-	          startClientSession.
+res := TraceCollector new
+	       collectFor: PythonLanguage new
+	       path: '/path/to/file/to/collect/execution.py'.
+```
 
-res := StackCollector collectStackFrom: client.
+
+## Setup python environment
+
+The Python trace collector relies on a local Python virtual environment and the debugpy DAP adapter.
+From the root directory of your Pharo image, create a virtual environment named .env and install debugpy:
+
+```Bash
+python3 -m venv .env
+source .env/bin/activate
+pip install debugpy
+```
+
+The trace collector expects the following structure:
+```
+<image-directory>/
+├── .env/
+│   ├── bin/
+│   │   └── python3
+├── Pharo.image
+└── pharo-local/
 ```

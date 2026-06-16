@@ -2,7 +2,7 @@ import sys
 from subprocess import run
 
 def startPy(port: int):
-    run(['.env/bin/debugpy-adapter --port', port])
+    run(['.env/bin/debugpy-adapter', '--port', port])
 
 def startJava(port: int):
     pass

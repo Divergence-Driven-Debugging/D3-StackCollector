@@ -4,11 +4,20 @@ from lspclient import LSPClient
 
 class JDTLS:
 
+    """
+    Convenience wrapper around the Eclipse JDT Language Server.
+
+    Provides helper methods for workspace initialization and
+    command execution.
+    """
+
     def __init__(self, client: LSPClient, bundles: list[str]):
+        """Create a JDTLS wrapper using the given LSP client."""
         self.client = client
         self.bundles = bundles
     
     def initialize(self, project_dir: Path):
+        """Initialize JDTLS for the specified project directory."""
 
         root_uri = project_dir.as_uri()
 
@@ -32,15 +41,17 @@ class JDTLS:
 
         self.client.notify("initialized", {})
     
-    def execute_command(self, command: str, arguments: list = []):
+    def execute_command(self, command: str):
+        """Execute a JDTLS workspace command."""
         return self.client.request(
             "workspace/executeCommand",
             {
                 "command": command,
-                "arguments": arguments
+                "arguments": []
             }
         )
     
     def shutdown(self):
+        """Gracefully shut down the language server."""
         self.client.request("shutdown", {})
         self.client.notify("exit", {})

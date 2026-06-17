@@ -5,7 +5,16 @@ from subprocess import Popen
 
 
 class LSPClient:
+
+    """
+    Minimal Language Server Protocol (LSP) client.
+
+    Handles JSON-RPC communication with a language server process
+    over stdin/stdout.
+    """
+    
     def __init__(self, process: Popen):
+        """Create a client connected to a language server process."""
         self.process = process
 
         self._next_id = 1
@@ -130,4 +139,5 @@ class LSPClient:
         })
 
     def close(self):
+        """Stop processing incoming messages."""
         self._running = False

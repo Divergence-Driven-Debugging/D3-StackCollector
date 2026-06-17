@@ -7,7 +7,7 @@ by:
 - creating a DAP client configured with the Java backend,
 - preparing the execution of a Java project for trace collection.
 
-Instances of this class are typically used by TraceCollector to obtain
+This class is used by TraceCollector to obtain
 execution traces from java programs.
 "
 Class {

@@ -69,7 +69,6 @@ JavaLanguage class >> mainClassFrom: aPath [
 
 	start := aPath indexOfSubCollection: prefix.
 
-	start = 0 ifTrue: [ self error: 'Path is not inside target/classes' ].
 
 	relative := aPath copyFrom: start + prefix size to: aPath size.
 

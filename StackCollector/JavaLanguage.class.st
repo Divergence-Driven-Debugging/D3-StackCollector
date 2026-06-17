@@ -38,7 +38,7 @@ JavaLanguage class >> createClientFor: aPath atPort: aNumber [
 	sourcePath := self sourcePathFrom: aPath.
 
 	^ DAPClientBuilder newSindarinClient
-		  port: 5679;
+		  port: aNumber;
 		  adapterID: 'java';
 		  functionBreakpoint: 'example.Main#main';
 		  arguments: {

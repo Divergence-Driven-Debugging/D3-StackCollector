@@ -19,6 +19,7 @@ Class {
 
 { #category : 'initialization' }
 DAPTraceCollector class >> collectStackFrom: aDAPClient [
+	"Collect and return the execution trace from aDAPClient."
 
 	| collector |
 	collector := self new clientDap: aDAPClient.
@@ -28,6 +29,8 @@ DAPTraceCollector class >> collectStackFrom: aDAPClient [
 
 { #category : 'initialization' }
 DAPTraceCollector class >> collectStackWithoutAssignmentsFrom: aDAPClient [ 
+	
+	"Collect and return the execution trace, without assignments, from aDAPClient."
 
 	| collector |
 	collector := self new clientDap: aDAPClient.
@@ -126,15 +129,16 @@ DAPTraceCollector >> getExecutionTraces [
 
 { #category : 'accessing' }
 DAPTraceCollector >> getExecutionTracesWithoutAssignments [
-	"Return the execution trace from the dap client connected to a debugger"
+	"Return the execution trace, without the assignments, from the dap client connected to a debugger"
 
 	| traces |
 	traces := OrderedCollection new.
 
 	self initializeExecutionTracing.
 
-	clientDap stepUntil: [ false ] do: [
-			self processCurrentWithoutAssignmentStepInto: traces ].
+	clientDap
+		stepUntil: [ false ]
+		do: [ self processCurrentWithoutAssignmentStepInto: traces ].
 
 	^ traces
 ]
@@ -298,6 +302,8 @@ DAPTraceCollector >> popPendingAssignment: aStackTrace [
 
 { #category : 'helpers' }
 DAPTraceCollector >> processCurrentStepInto: traces [
+	"Process the current step-into event and record call and
+	assignment traces."
 
 	| hasEnteredNewCall currentFrameBody |
 	hasEnteredNewCall := clientDap hasEnteredNewCall.
@@ -315,6 +321,7 @@ DAPTraceCollector >> processCurrentStepInto: traces [
 
 { #category : 'helpers' }
 DAPTraceCollector >> processCurrentWithoutAssignmentStepInto: traces [
+	"Process the current step-into event and record call traces only, ignoring assignment traces."
 
 	| hasEnteredNewCall currentFrameBody |
 	hasEnteredNewCall := clientDap hasEnteredNewCall.
@@ -384,6 +391,7 @@ DAPTraceCollector >> pushPendingAssignment: aStackTrace [
 
 { #category : 'helpers' }
 DAPTraceCollector >> shouldSkipFrameBody: currentFrameBody [
+	"Answer true if the current frame should be ignored when collecting traces."
 
 	| currentFrame path |
 	currentFrame := (currentFrameBody at: 'stackFrames') first.

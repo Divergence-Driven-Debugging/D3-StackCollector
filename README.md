@@ -10,6 +10,7 @@ Pharo 13
 Metacello new
 	baseline: 'StackCollector';
 	repository: 'github://Divergence-Driven-Debugging/D3-StackCollector';
+	onConflictUseIncoming;
 	load
 ```
 

@@ -17,25 +17,8 @@ Class {
 	#package : 'StackCollector'
 }
 
-{ #category : 'private - actions' }
-JavaLanguage class >> classPathFrom: aPath [
-
-    | pathString index |
-
-    pathString := aPath asString.
-
-    index := pathString indexOfSubCollection: '/target/classes'.
-
-    ^ pathString copyFrom: 1 to: index + '/target/classes' size - 1
-]
-
 { #category : 'actions' }
 JavaLanguage class >> createClientFor: aPath atPort: aNumber [
-
-	| mainClass classPath sourcePath |
-	mainClass := self mainClassFrom: aPath.
-	classPath := self classPathFrom: aPath.
-	sourcePath := self sourcePathFrom: aPath.
 
 	^ DAPClientBuilder newSindarinClient
 		  port: aNumber;
@@ -59,32 +42,4 @@ JavaLanguage class >> createClientFor: aPath atPort: aNumber [
 JavaLanguage class >> launchAdapterAtPort: aNumber [
 
 	AdapterLauncher launchJavaAdapterAtPort: aNumber
-]
-
-{ #category : 'private - actions' }
-JavaLanguage class >> mainClassFrom: aPath [
-
-	| prefix start relative |
-	prefix := '/target/classes/'.
-
-	start := aPath indexOfSubCollection: prefix.
-
-
-	relative := aPath copyFrom: start + prefix size to: aPath size.
-
-	relative := relative copyUpToLast: $..
-
-	^ relative copyReplaceAll: '/' with: '.'
-]
-
-{ #category : 'private - actions' }
-JavaLanguage class >> sourcePathFrom: aPath [
-
-    | base |
-
-    base := aPath asString
-        copyFrom: 1
-        to: (aPath asString indexOfSubCollection: '/target/classes') - 1.
-
-    ^ base , '/src/main/java'
 ]

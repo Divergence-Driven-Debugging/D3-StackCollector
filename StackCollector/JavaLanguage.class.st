@@ -19,6 +19,8 @@ Class {
 
 { #category : 'actions' }
 JavaLanguage class >> createClientFor: aPath atPort: aNumber [
+	"Create a DAP client configured to debug the source located at aPath
+	through the adapter listening on aNumber."
 
 	^ DAPClientBuilder newSindarinClient
 		  port: aNumber;
@@ -40,6 +42,7 @@ JavaLanguage class >> createClientFor: aPath atPort: aNumber [
 
 { #category : 'actions' }
 JavaLanguage class >> launchAdapterAtPort: aNumber [
+	"Start the java adapter configured to accept connections on port aNumber."
 
 	AdapterLauncher launchJavaAdapterAtPort: aNumber
 ]

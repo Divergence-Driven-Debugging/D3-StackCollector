@@ -19,6 +19,8 @@ Class {
 
 { #category : 'actions' }
 PythonLanguage class >> createClientFor: aPath atPort: aNumber [
+	"Create a DAP client configured to debug the source located at aPath
+	through the adapter listening on aNumber."
 
 	^ DAPClientBuilder newSindarinClient
 		  port: aNumber;
@@ -33,6 +35,14 @@ PythonLanguage class >> createClientFor: aPath atPort: aNumber [
 
 { #category : 'actions' }
 PythonLanguage class >> launchAdapterAtPort: aNumber [
+	"Start the python adapter configured to accept connections on port aNumber."
 
 	AdapterLauncher launchPythonAdapterAtPort: aNumber
+]
+
+{ #category : 'asserting' }
+PythonLanguage class >> shouldSkipForPath: aPath [
+	"Answer true if aPath should be ignored when collecting traces."
+
+	^ aPath includesSubstring: 'runpy.py'
 ]

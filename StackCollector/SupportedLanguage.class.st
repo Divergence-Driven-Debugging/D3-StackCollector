@@ -33,3 +33,10 @@ SupportedLanguage class >> launchAdapterAtPort: aNumber [
 
 	^ self subclassResponsibility
 ]
+
+{ #category : 'asserting' }
+SupportedLanguage class >> shouldSkipForPath: aPath [
+	"Answer true if aPath should be ignored when collecting traces."
+
+	^ self subclassResponsibility
+]

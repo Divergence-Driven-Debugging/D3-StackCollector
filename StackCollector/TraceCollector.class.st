@@ -28,14 +28,22 @@ Class {
 { #category : 'collect' }
 TraceCollector >> collectFor: aSupportedLanguage path: aPath [
 	"Collect the execution trace of the program located at
-    aPath using aSupportedLanguage.
+	aPath using aSupportedLanguage, including assignment operations."
 
-    This method starts the corresponding DAP adapter, waits for it to
-    become available, creates a DAP client, waits for the connection
-    to be established, collects the execution trace, and finally
-    closes the client connection."
+	^ self collectFor: aSupportedLanguage path: aPath using: [ :client |
+			  (DAPTraceCollector
+				   collectStackFrom: client
+				   for: aSupportedLanguage) asArray ]
+]
 
-	| clientDAP res |
+{ #category : 'private' }
+TraceCollector >> collectFor: aSupportedLanguage path: aPath using: aBlock [
+	"Start the DAP adapter for aSupportedLanguage and create a
+	DAP client for the program located at aPath. Evaluate aBlock,
+	passing the client as argument, and ensure that the connection
+	is closed when the operation is finished."
+
+	| clientDAP |
 	aSupportedLanguage launchAdapterAtPort: self port.
 
 	1 seconds asDuration wait.
@@ -46,9 +54,18 @@ TraceCollector >> collectFor: aSupportedLanguage path: aPath [
 
 	1 seconds asDuration wait.
 
-	res := (DAPTraceCollector collectStackFrom: clientDAP) asArray.
-	clientDAP closeConnection.
-	^ res
+	^ [ aBlock value: clientDAP ] ensure: [ clientDAP closeConnection ]
+]
+
+{ #category : 'collect' }
+TraceCollector >> collectWithoutAssignmentFor: aSupportedLanguage path: aPath [
+	"Collect the execution trace of the program located at
+	aPath using aSupportedLanguage, excluding assignment operations."
+
+	^ self collectFor: aSupportedLanguage path: aPath using: [ :client |
+			  (DAPTraceCollector
+				   collectStackWithoutAssignmentsFrom: client
+				   for: aSupportedLanguage) asArray ]
 ]
 
 { #category : 'accessing' }

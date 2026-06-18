@@ -46,3 +46,10 @@ JavaLanguage class >> launchAdapterAtPort: aNumber [
 
 	AdapterLauncher launchJavaAdapterAtPort: aNumber
 ]
+
+{ #category : 'asserting' }
+JavaLanguage class >> shouldSkipForPath: aPath [
+	"Answer true if aPath should be ignored when collecting traces."
+
+	^ aPath includesSubstring: 'JavaVirtualMachines'
+]

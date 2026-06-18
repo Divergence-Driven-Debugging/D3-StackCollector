@@ -39,3 +39,10 @@ PythonLanguage class >> launchAdapterAtPort: aNumber [
 
 	AdapterLauncher launchPythonAdapterAtPort: aNumber
 ]
+
+{ #category : 'asserting' }
+PythonLanguage class >> shouldSkipForPath: aPath [
+	"Answer true if aPath should be ignored when collecting traces."
+
+	^ aPath includesSubstring: 'runpy.py'
+]

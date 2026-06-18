@@ -30,11 +30,10 @@ TraceCollector >> collectFor: aSupportedLanguage path: aPath [
 	"Collect the execution trace of the program located at
 	aPath using aSupportedLanguage, including assignment operations."
 
-	^ self
-		  collectFor: aSupportedLanguage
-		  path: aPath
-		  using: [ :client |
-		  (DAPTraceCollector collectStackFrom: client) asArray ]
+	^ self collectFor: aSupportedLanguage path: aPath using: [ :client |
+			  (DAPTraceCollector
+				   collectStackFrom: client
+				   for: aSupportedLanguage) asArray ]
 ]
 
 { #category : 'private' }
@@ -64,8 +63,9 @@ TraceCollector >> collectWithoutAssignmentFor: aSupportedLanguage path: aPath [
 	aPath using aSupportedLanguage, excluding assignment operations."
 
 	^ self collectFor: aSupportedLanguage path: aPath using: [ :client |
-		  (DAPTraceCollector collectStackWithoutAssignmentsFrom: client)
-			  asArray ]
+			  (DAPTraceCollector
+				   collectStackWithoutAssignmentsFrom: client
+				   for: aSupportedLanguage) asArray ]
 ]
 
 { #category : 'accessing' }

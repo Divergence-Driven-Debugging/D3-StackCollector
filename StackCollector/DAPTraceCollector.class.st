@@ -18,22 +18,25 @@ Class {
 }
 
 { #category : 'initialization' }
-DAPTraceCollector class >> collectStackFrom: aDAPClient [
-	"Collect and return the execution trace from aDAPClient."
+DAPTraceCollector class >> collectStackFrom: aDAPClient for: aSupportedLanguage [
+	"Collect and return the execution trace from aDAPClient for aSupportedLanguage."
 
 	| collector |
-	collector := self new clientDap: aDAPClient.
+	collector := self new
+		             clientDap: aDAPClient;
+		             supportedLanguage: aSupportedLanguage.
 
 	^ collector getExecutionTraces
 ]
 
 { #category : 'initialization' }
-DAPTraceCollector class >> collectStackWithoutAssignmentsFrom: aDAPClient [ 
-	
-	"Collect and return the execution trace, without assignments, from aDAPClient."
+DAPTraceCollector class >> collectStackWithoutAssignmentsFrom: aDAPClient for: aSupportedLanguage [
+	"Collect and return the execution trace, without assignments, from aDAPClient for aSupportedLanguage."
 
 	| collector |
-	collector := self new clientDap: aDAPClient.
+	collector := self new
+		             clientDap: aDAPClient;
+		             supportedLanguage: aSupportedLanguage.
 
 	^ collector getExecutionTracesWithoutAssignments
 ]
@@ -398,8 +401,7 @@ DAPTraceCollector >> shouldSkipFrameBody: currentFrameBody [
 
 	path := currentFrame at: 'source' at: 'path' ifAbsent: [ ^ true ].
 
-	^ (path includesSubstring: 'runpy.py') or: [
-		  path includesSubstring: 'JavaVirtualMachines' ]
+	^ supportedLanguage shouldSkipForPath: path
 ]
 
 { #category : 'accessing' }

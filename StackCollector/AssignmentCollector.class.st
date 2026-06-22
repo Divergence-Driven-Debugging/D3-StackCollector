@@ -14,14 +14,25 @@ Class {
 }
 
 { #category : 'private - accessing' }
+AssignmentCollector >> assignmentNodeTypes [
+
+	^ self subclassResponsibility
+]
+
+{ #category : 'private - accessing' }
+AssignmentCollector >> assignmentTargetNodeFor: aNode [
+
+	^ self subclassResponsibility
+]
+
+{ #category : 'private - accessing' }
 AssignmentCollector >> collectAssignmentTargetsFrom: aNode source: source into: assignments [
 	"Recursively collect assignment targets from the left-hand
 	side of an assignment expression."
 
-	(#( 'identifier' 'attribute' 'subscript' ) includes: aNode type)
-		ifTrue: [
-				assignments add: (aNode textFromSourceText: source).
-				^ self ].
+	(self targetNodeTypes includes: aNode type) ifTrue: [
+			assignments add: (aNode textFromSourceText: source).
+			^ self ].
 
 	"Traverse child nodes to find nested targets."
 	aNode namedChildren do: [ :child |
@@ -36,16 +47,15 @@ AssignmentCollector >> collectAssignmentsFrom: aNode source: source into: assign
 	"Recursively traverse the AST and collect assignment targets
 	from assignment and augmented assignment nodes."
 
-	(#( 'assignment' 'augmented_assignment' ) includes: aNode type)
-		ifTrue: [
-				| left |
-				left := aNode nodeChildByFieldName: 'left'.
+	(self assignmentNodeTypes includes: aNode type) ifTrue: [
+			| target |
+			target := self assignmentTargetNodeFor: aNode.
 
-				left ifNotNil: [
-						self
-							collectAssignmentTargetsFrom: left
-							source: source
-							into: assignments ] ].
+			target ifNotNil: [
+					self
+						collectAssignmentTargetsFrom: target
+						source: source
+						into: assignments ] ].
 
 	"Continue traversal on child nodes."
 	aNode namedChildren do: [ :child |
@@ -71,14 +81,25 @@ AssignmentCollector >> getAssignmentNameFromLine: aString [
 	^ assignments asArray
 ]
 
-{ #category : 'accessing' }
-AssignmentCollector >> parser [
+{ #category : 'initialization' }
+AssignmentCollector >> initialize [
 
-	^ parser
+	super initialize.
+
+	parser := TSParser new
+		          language: self languageToParse;
+		          yourself
 ]
 
 { #category : 'accessing' }
-AssignmentCollector >> parser: aTSParser [
+AssignmentCollector >> languageToParse [
+	"Return a TSLanguage"
 
-	parser := aTSParser
+	^ self subclassResponsibility
+]
+
+{ #category : 'private - accessing' }
+AssignmentCollector >> targetNodeTypes [
+
+	^ self subclassResponsibility
 ]

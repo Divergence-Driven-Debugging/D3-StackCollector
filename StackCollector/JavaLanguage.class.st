@@ -17,6 +17,12 @@ Class {
 	#package : 'StackCollector'
 }
 
+{ #category : 'accessing' }
+JavaLanguage class >> assignmentCollector [
+
+	^ AssignmentCollectorJava new
+]
+
 { #category : 'actions' }
 JavaLanguage class >> createClientFor: aPath atPort: aNumber [
 	"Create a DAP client configured to debug the source located at aPath

@@ -73,6 +73,12 @@ DAPTraceCollector >> argumentsForFrame: aReceiverFrame [
 ]
 
 { #category : 'accessing' }
+DAPTraceCollector >> assignmentCollector: anAssignmentCollector [
+
+	assignmentCollector := anAssignmentCollector
+]
+
+{ #category : 'accessing' }
 DAPTraceCollector >> clientDap [
 
 	^ clientDap
@@ -242,14 +248,8 @@ DAPTraceCollector >> id [
 { #category : 'initialization' }
 DAPTraceCollector >> initialize [
 
-	| parser pythonLanguage |
 	super initialize.
 
-	assignmentCollector := AssignmentCollector new.
-	parser := TSParser new.
-	pythonLanguage := TSLanguage python.
-	parser language: pythonLanguage.
-	assignmentCollector parser: parser.
 	fileLineCache := FileLineCache new.
 	pendingAssignmentsStack := Stack new
 ]
@@ -309,6 +309,7 @@ DAPTraceCollector >> processCurrentStepInto: traces [
 	assignment traces."
 
 	| hasEnteredNewCall currentFrameBody |
+
 	hasEnteredNewCall := clientDap hasEnteredNewCall.
 	currentFrameBody := clientDap currentFrameBody.
 
@@ -407,7 +408,8 @@ DAPTraceCollector >> shouldSkipFrameBody: currentFrameBody [
 { #category : 'accessing' }
 DAPTraceCollector >> supportedLanguage: aSupportedLanguage [
 
-	supportedLanguage := aSupportedLanguage 
+	supportedLanguage := aSupportedLanguage.
+	assignmentCollector := aSupportedLanguage assignmentCollector
 ]
 
 { #category : 'helpers' }

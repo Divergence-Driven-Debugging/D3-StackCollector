@@ -15,6 +15,12 @@ Class {
 	#package : 'StackCollector'
 }
 
+{ #category : 'accessing' }
+SupportedLanguage class >> assignmentCollector [
+
+	^ self subclassResponsibility
+]
+
 { #category : 'actions' }
 SupportedLanguage class >> createClientFor: aPath atPort: aNumber [
 	"Create a DAP client configured to debug the source located at aPath

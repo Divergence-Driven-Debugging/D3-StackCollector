@@ -17,6 +17,12 @@ Class {
 	#package : 'StackCollector'
 }
 
+{ #category : 'accessing' }
+PythonLanguage class >> assignmentCollector [
+
+	^ AssignmentCollectorPython new
+]
+
 { #category : 'actions' }
 PythonLanguage class >> createClientFor: aPath atPort: aNumber [
 	"Create a DAP client configured to debug the source located at aPath

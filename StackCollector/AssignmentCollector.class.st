@@ -15,12 +15,15 @@ Class {
 
 { #category : 'private - accessing' }
 AssignmentCollector >> assignmentNodeTypes [
+	"Answer the collection of AST node types that represent assignment for the target language."
 
 	^ self subclassResponsibility
 ]
 
 { #category : 'private - accessing' }
 AssignmentCollector >> assignmentTargetNodeFor: aNode [
+	"Answer the AST node corresponding to the assignment target of the given assignment node.
+	Answer nil if the assignment node has no target."
 
 	^ self subclassResponsibility
 ]
@@ -64,19 +67,14 @@ AssignmentCollector >> collectAssignmentsFrom: aNode source: source into: assign
 
 { #category : 'accessing' }
 AssignmentCollector >> getAssignmentNameFromLine: aString [
-	
 	"Return an Array of string corresponding to the assignment target"
-	
+
 	| root assignments |
-	
 	root := (parser parseString: aString) rootNode.
 
 	assignments := OrderedCollection new.
 
-	self
-		collectAssignmentsFrom: root
-		source: aString
-		into: assignments.
+	self collectAssignmentsFrom: root source: aString into: assignments.
 
 	^ assignments asArray
 ]
@@ -93,13 +91,14 @@ AssignmentCollector >> initialize [
 
 { #category : 'accessing' }
 AssignmentCollector >> languageToParse [
-	"Return a TSLanguage"
+	"Return the target language, a TSLanguage"
 
 	^ self subclassResponsibility
 ]
 
 { #category : 'private - accessing' }
 AssignmentCollector >> targetNodeTypes [
+	"Answer the collection of AST node types that can be considered valid assignment targets for the target language."
 
 	^ self subclassResponsibility
 ]

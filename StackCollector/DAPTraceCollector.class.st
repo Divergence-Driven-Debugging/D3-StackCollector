@@ -8,7 +8,6 @@ Class {
 	#instVars : [
 		'clientDap',
 		'id',
-		'assignmentCollector',
 		'fileLineCache',
 		'pendingAssignmentsStack',
 		'supportedLanguage'
@@ -70,12 +69,6 @@ DAPTraceCollector >> argumentsForFrame: aReceiverFrame [
 		  select: [ :each | (each at: 'type') isNotEmpty ]
 		  thenCollect: [ :each |
 			  self transformVariables: each with: (aReceiverFrame at: 'id') ]
-]
-
-{ #category : 'accessing' }
-DAPTraceCollector >> assignmentCollector: anAssignmentCollector [
-
-	assignmentCollector := anAssignmentCollector
 ]
 
 { #category : 'accessing' }
@@ -352,8 +345,10 @@ DAPTraceCollector >> pushPendingAssignment: aStackTrace [
 	frameId := topFrame at: 'id'.
 	depth := aStackTrace at: 'totalFrames'.
 
-	names := assignmentCollector getAssignmentNameFromLine:
-		         (fileLineCache getLine: line from: path asFileReference).
+	names := AssignmentCollector new
+		         getAssignmentNameFromLine:
+		         (fileLineCache getLine: line from: path asFileReference)
+		         for: supportedLanguage.
 
 	top := pendingAssignmentsStack isEmpty
 		       ifTrue: [ nil ]
@@ -408,8 +403,7 @@ DAPTraceCollector >> shouldSkipFrameBody: currentFrameBody [
 { #category : 'accessing' }
 DAPTraceCollector >> supportedLanguage: aSupportedLanguage [
 
-	supportedLanguage := aSupportedLanguage.
-	assignmentCollector := aSupportedLanguage assignmentCollector
+	supportedLanguage := aSupportedLanguage
 ]
 
 { #category : 'helpers' }

@@ -7,33 +7,18 @@ Class {
 	#name : 'AssignmentCollector',
 	#superclass : 'Object',
 	#instVars : [
-		'parser'
+		'supportedLanguage'
 	],
 	#category : 'StackCollector',
 	#package : 'StackCollector'
 }
 
 { #category : 'private - accessing' }
-AssignmentCollector >> assignmentNodeTypes [
-	"Answer the collection of AST node types that represent assignment for the target language."
-
-	^ self subclassResponsibility
-]
-
-{ #category : 'private - accessing' }
-AssignmentCollector >> assignmentTargetNodeFor: aNode [
-	"Answer the AST node corresponding to the assignment target of the given assignment node.
-	Answer nil if the assignment node has no target."
-
-	^ self subclassResponsibility
-]
-
-{ #category : 'private - accessing' }
 AssignmentCollector >> collectAssignmentTargetsFrom: aNode source: source into: assignments [
 	"Recursively collect assignment targets from the left-hand
 	side of an assignment expression."
 
-	(self targetNodeTypes includes: aNode type) ifTrue: [
+	(supportedLanguage targetNodeTypes includes: aNode type) ifTrue: [
 			assignments add: (aNode textFromSourceText: source).
 			^ self ].
 
@@ -50,9 +35,9 @@ AssignmentCollector >> collectAssignmentsFrom: aNode source: source into: assign
 	"Recursively traverse the AST and collect assignment targets
 	from assignment and augmented assignment nodes."
 
-	(self assignmentNodeTypes includes: aNode type) ifTrue: [
+	(supportedLanguage assignmentNodeTypes includes: aNode type) ifTrue: [
 			| target |
-			target := self assignmentTargetNodeFor: aNode.
+			target := supportedLanguage assignmentTargetNodeFor: aNode.
 
 			target ifNotNil: [
 					self
@@ -66,10 +51,14 @@ AssignmentCollector >> collectAssignmentsFrom: aNode source: source into: assign
 ]
 
 { #category : 'accessing' }
-AssignmentCollector >> getAssignmentNameFromLine: aString [
+AssignmentCollector >> getAssignmentNameFromLine: aString for: aSupportedLanguage [
 	"Return an Array of string corresponding to the assignment target"
 
-	| root assignments |
+	| parser root assignments |
+	supportedLanguage := aSupportedLanguage.
+	parser := TSParser new
+		          language: aSupportedLanguage languageToParse;
+		          yourself.
 	root := (parser parseString: aString) rootNode.
 
 	assignments := OrderedCollection new.
@@ -77,28 +66,4 @@ AssignmentCollector >> getAssignmentNameFromLine: aString [
 	self collectAssignmentsFrom: root source: aString into: assignments.
 
 	^ assignments asArray
-]
-
-{ #category : 'initialization' }
-AssignmentCollector >> initialize [
-
-	super initialize.
-
-	parser := TSParser new
-		          language: self languageToParse;
-		          yourself
-]
-
-{ #category : 'accessing' }
-AssignmentCollector >> languageToParse [
-	"Return the target language, a TSLanguage"
-
-	^ self subclassResponsibility
-]
-
-{ #category : 'private - accessing' }
-AssignmentCollector >> targetNodeTypes [
-	"Answer the collection of AST node types that can be considered valid assignment targets for the target language."
-
-	^ self subclassResponsibility
 ]

@@ -16,7 +16,16 @@ Class {
 }
 
 { #category : 'accessing' }
-SupportedLanguage class >> assignmentCollector [
+SupportedLanguage class >> assignmentNodeTypes [
+	"Answer the collection of AST node types that represent assignment for the target language."
+
+	^ self subclassResponsibility
+]
+
+{ #category : 'accessing' }
+SupportedLanguage class >> assignmentTargetNodeFor: aNode [
+	"Answer the AST node corresponding to the assignment target of the given assignment node.
+	Answer nil if the assignment node has no target."
 
 	^ self subclassResponsibility
 ]
@@ -27,6 +36,13 @@ SupportedLanguage class >> createClientFor: aPath atPort: aNumber [
 	through the adapter listening on aNumber.
 
 	Subclasses must provide a language-specific implementation."
+
+	^ self subclassResponsibility
+]
+
+{ #category : 'accessing' }
+SupportedLanguage class >> languageToParse [
+	"Return the target language, a TSLanguage"
 
 	^ self subclassResponsibility
 ]
@@ -43,6 +59,13 @@ SupportedLanguage class >> launchAdapterAtPort: aNumber [
 { #category : 'asserting' }
 SupportedLanguage class >> shouldSkipForPath: aPath [
 	"Answer true if aPath should be ignored when collecting traces."
+
+	^ self subclassResponsibility
+]
+
+{ #category : 'accessing' }
+SupportedLanguage class >> targetNodeTypes [
+	"Answer the collection of AST node types that can be considered valid assignment targets for the target language."
 
 	^ self subclassResponsibility
 ]

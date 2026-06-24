@@ -103,13 +103,15 @@ AssignmentCollectorPythonTest >> setUp [
 			self class testParameters expandMatrix first do: [ :aParameter |
 				aParameter applyTo: self ] ].
 
-	assignmentCollector := AssignmentCollectorPython new
+	assignmentCollector := AssignmentCollector new
 ]
 
 { #category : 'tests' }
 AssignmentCollectorPythonTest >> testGetAssignmentNameFromLine [
 
 	self
-		assert: (assignmentCollector getAssignmentNameFromLine: line)
+		assert: (assignmentCollector
+				 getAssignmentNameFromLine: line
+				 for: PythonLanguage)
 		equals: expectedResult
 ]

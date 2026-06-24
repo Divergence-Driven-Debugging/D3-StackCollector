@@ -103,13 +103,16 @@ AssignmentCollectorJavaTest >> setUp [
 			self class testParameters expandMatrix first do: [ :aParameter |
 				aParameter applyTo: self ] ].
 
-	assignmentCollector := AssignmentCollectorJava new
+	assignmentCollector := AssignmentCollector new
 ]
 
 { #category : 'tests' }
 AssignmentCollectorJavaTest >> testGetAssignmentNameFromLine [
 
 	self
-		assert: (assignmentCollector getAssignmentNameFromLine: line)
+		assert:
+		(assignmentCollector
+			 getAssignmentNameFromLine: line
+			 for: JavaLanguage)
 		equals: expectedResult
 ]

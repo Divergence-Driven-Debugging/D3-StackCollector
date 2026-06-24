@@ -18,9 +18,18 @@ Class {
 }
 
 { #category : 'accessing' }
-PythonLanguage class >> assignmentCollector [
+PythonLanguage class >> assignmentNodeTypes [
+	"Answer the collection of AST node types that represent assignment for the target language."
 
-	^ AssignmentCollectorPython new
+	^ #( 'assignment' 'augmented_assignment' )
+]
+
+{ #category : 'accessing' }
+PythonLanguage class >> assignmentTargetNodeFor: aNode [
+	"Answer the AST node corresponding to the assignment target of the given assignment node.
+	Answer nil if the assignment node has no target."
+
+	^ aNode nodeChildByFieldName: 'left'
 ]
 
 { #category : 'actions' }
@@ -39,6 +48,13 @@ PythonLanguage class >> createClientFor: aPath atPort: aNumber [
 		  startClientSession
 ]
 
+{ #category : 'accessing' }
+PythonLanguage class >> languageToParse [
+	"Return a TSLanguage"
+
+	^ TSLanguage python
+]
+
 { #category : 'actions' }
 PythonLanguage class >> launchAdapterAtPort: aNumber [
 	"Start the python adapter configured to accept connections on port aNumber."
@@ -51,4 +67,11 @@ PythonLanguage class >> shouldSkipForPath: aPath [
 	"Answer true if aPath should be ignored when collecting traces."
 
 	^ aPath includesSubstring: 'runpy.py'
+]
+
+{ #category : 'accessing' }
+PythonLanguage class >> targetNodeTypes [
+	"Answer the collection of AST node types that can be considered valid assignment targets for the target language."
+
+	^ #( 'identifier' 'attribute' 'subscript' )
 ]

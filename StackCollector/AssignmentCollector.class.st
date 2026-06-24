@@ -7,7 +7,7 @@ Class {
 	#name : 'AssignmentCollector',
 	#superclass : 'Object',
 	#instVars : [
-		'parser'
+		'supportedLanguage'
 	],
 	#category : 'StackCollector',
 	#package : 'StackCollector'
@@ -18,10 +18,9 @@ AssignmentCollector >> collectAssignmentTargetsFrom: aNode source: source into: 
 	"Recursively collect assignment targets from the left-hand
 	side of an assignment expression."
 
-	(#( 'identifier' 'attribute' 'subscript' ) includes: aNode type)
-		ifTrue: [
-				assignments add: (aNode textFromSourceText: source).
-				^ self ].
+	(supportedLanguage targetNodeTypes includes: aNode type) ifTrue: [
+			assignments add: (aNode textFromSourceText: source).
+			^ self ].
 
 	"Traverse child nodes to find nested targets."
 	aNode namedChildren do: [ :child |
@@ -36,16 +35,15 @@ AssignmentCollector >> collectAssignmentsFrom: aNode source: source into: assign
 	"Recursively traverse the AST and collect assignment targets
 	from assignment and augmented assignment nodes."
 
-	(#( 'assignment' 'augmented_assignment' ) includes: aNode type)
-		ifTrue: [
-				| left |
-				left := aNode nodeChildByFieldName: 'left'.
+	(supportedLanguage assignmentNodeTypes includes: aNode type) ifTrue: [
+			| target |
+			target := supportedLanguage assignmentTargetNodeFor: aNode.
 
-				left ifNotNil: [
-						self
-							collectAssignmentTargetsFrom: left
-							source: source
-							into: assignments ] ].
+			target ifNotNil: [
+					self
+						collectAssignmentTargetsFrom: target
+						source: source
+						into: assignments ] ].
 
 	"Continue traversal on child nodes."
 	aNode namedChildren do: [ :child |
@@ -53,32 +51,19 @@ AssignmentCollector >> collectAssignmentsFrom: aNode source: source into: assign
 ]
 
 { #category : 'accessing' }
-AssignmentCollector >> getAssignmentNameFromLine: aString [
-	
+AssignmentCollector >> getAssignmentNameFromLine: aString for: aSupportedLanguage [
 	"Return an Array of string corresponding to the assignment target"
-	
-	| root assignments |
-	
+
+	| parser root assignments |
+	supportedLanguage := aSupportedLanguage.
+	parser := TSParser new
+		          language: aSupportedLanguage languageToParse;
+		          yourself.
 	root := (parser parseString: aString) rootNode.
 
 	assignments := OrderedCollection new.
 
-	self
-		collectAssignmentsFrom: root
-		source: aString
-		into: assignments.
+	self collectAssignmentsFrom: root source: aString into: assignments.
 
 	^ assignments asArray
-]
-
-{ #category : 'accessing' }
-AssignmentCollector >> parser [
-
-	^ parser
-]
-
-{ #category : 'accessing' }
-AssignmentCollector >> parser: aTSParser [
-
-	parser := aTSParser
 ]

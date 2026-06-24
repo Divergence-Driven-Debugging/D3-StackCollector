@@ -8,7 +8,6 @@ Class {
 	#instVars : [
 		'clientDap',
 		'id',
-		'assignmentCollector',
 		'fileLineCache',
 		'pendingAssignmentsStack',
 		'supportedLanguage'
@@ -242,14 +241,8 @@ DAPTraceCollector >> id [
 { #category : 'initialization' }
 DAPTraceCollector >> initialize [
 
-	| parser pythonLanguage |
 	super initialize.
 
-	assignmentCollector := AssignmentCollector new.
-	parser := TSParser new.
-	pythonLanguage := TSLanguage python.
-	parser language: pythonLanguage.
-	assignmentCollector parser: parser.
 	fileLineCache := FileLineCache new.
 	pendingAssignmentsStack := Stack new
 ]
@@ -309,6 +302,7 @@ DAPTraceCollector >> processCurrentStepInto: traces [
 	assignment traces."
 
 	| hasEnteredNewCall currentFrameBody |
+
 	hasEnteredNewCall := clientDap hasEnteredNewCall.
 	currentFrameBody := clientDap currentFrameBody.
 
@@ -351,8 +345,10 @@ DAPTraceCollector >> pushPendingAssignment: aStackTrace [
 	frameId := topFrame at: 'id'.
 	depth := aStackTrace at: 'totalFrames'.
 
-	names := assignmentCollector getAssignmentNameFromLine:
-		         (fileLineCache getLine: line from: path asFileReference).
+	names := AssignmentCollector new
+		         getAssignmentNameFromLine:
+		         (fileLineCache getLine: line from: path asFileReference)
+		         for: supportedLanguage.
 
 	top := pendingAssignmentsStack isEmpty
 		       ifTrue: [ nil ]
@@ -407,7 +403,7 @@ DAPTraceCollector >> shouldSkipFrameBody: currentFrameBody [
 { #category : 'accessing' }
 DAPTraceCollector >> supportedLanguage: aSupportedLanguage [
 
-	supportedLanguage := aSupportedLanguage 
+	supportedLanguage := aSupportedLanguage
 ]
 
 { #category : 'helpers' }

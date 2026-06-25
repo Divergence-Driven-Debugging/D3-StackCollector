@@ -1,20 +1,21 @@
 from pathlib import Path
-import sys
+import sys, os
+
+from dotenv import load_dotenv 
 from subprocess import run, Popen, PIPE
 
 from jdtls import JDTLS
 from lspclient import LSPClient
 
-def startPy(port: int):
-    print('run', '.env/bin/debugpy-adapter', '--port', port, flush=True)
-    run(['.env/bin/debugpy-adapter', '--port', port])
 
-def startJava(port: int):
-    java_debug_jar = Path("/Users/flavienvolant/Documents/sindarin-dap/java/java-debug-vscode/extension/server/com.microsoft.java.debug.plugin-0.53.2.jar")
+def startPy(port: int, project_directory: str):
+    print('run', project_directory + '/venv/bin/debugpy-adapter', '--port', port, flush=True)
+    run([project_directory + '/venv/bin/debugpy-adapter', '--port', port])
 
-    jdtls_dir = Path("/Users/flavienvolant/Documents/sindarin-dap/java/jdt.lsp")
+def startJava(port: int, project_directory: str):
 
-    project_dir = Path("/Users/flavienvolant/Documents/sindarin-dap/java")
+    java_debug_jar = Path(os.getenv("JAVA_DEBUG"))
+    jdtls_dir = Path(os.getenv("JDT_LSP"))
 
     print('Popen', str(jdtls_dir / "bin" / "jdtls"), flush=True)
     process = Popen(
@@ -29,7 +30,7 @@ def startJava(port: int):
     jdtls = JDTLS(client, [str(java_debug_jar)])
 
     print("\nLSP Initialize", flush=True)
-    jdtls.initialize(project_dir)
+    jdtls.initialize(project_directory)
 
     print("\nLSP startDebugSession", flush=True)
     adapter_port = jdtls.execute_command("vscode.java.startDebugSession")
@@ -50,15 +51,15 @@ def startJs(port: int):
 
 def main(argv: list[str]):
     """
-    Script must be executed with `python setup.py [language] [port]`
+    Script must be executed with `python setup.py [language] [port] [project_directory]`
     """
 
-    language, port = argv[1], argv[2]
+    language, port, project_directory = argv[1], argv[2], argv[3]
 
     if language.lower() == "py":
-        startPy(port)
+        startPy(port, project_directory)
     elif language.lower() == "java":
-        startJava(port)
+        startJava(port, project_directory)
     elif language.lower() == "js":
         startJs(port)
 

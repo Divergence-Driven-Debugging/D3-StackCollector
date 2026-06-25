@@ -1,7 +1,7 @@
 from pathlib import Path
 import sys, os
 
-from dotenv import load_dotenv 
+from dotenv import load_dotenv
 from subprocess import run, Popen, PIPE
 
 from jdtls import JDTLS
@@ -13,9 +13,10 @@ def startPy(port: int, project_directory: str):
     run([project_directory + '/venv/bin/debugpy-adapter', '--port', port])
 
 def startJava(port: int, project_directory: str):
+    """Starts the java adapter on `port` and the java LSP"""
 
     java_debug_jar = Path(os.getenv("JAVA_DEBUG"))
-    jdtls_dir = Path(os.getenv("JDT_LSP"))
+    jdtls_dir = Path(os.getenv("JDTLS"))
 
     print('Popen', str(jdtls_dir / "bin" / "jdtls"), flush=True)
     process = Popen(
@@ -23,7 +24,7 @@ def startJava(port: int, project_directory: str):
         cwd=str(jdtls_dir),
         stdin=PIPE,
         stdout=PIPE,
-        stderr=PIPE
+        stderr=PIPE,
     )
 
     client = LSPClient(process)
@@ -50,9 +51,7 @@ def startJs(port: int):
 
 
 def main(argv: list[str]):
-    """
-    Script must be executed with `python setup.py [language] [port] [project_directory]`
-    """
+    """Script must be executed with `python setup.py [language] [port] [project_directory]`"""
 
     language, port, project_directory = argv[1], argv[2], argv[3]
 
@@ -62,6 +61,7 @@ def main(argv: list[str]):
         startJava(port, project_directory)
     elif language.lower() == "js":
         startJs(port)
+
 
 if __name__ == "__main__":
     main(sys.argv)

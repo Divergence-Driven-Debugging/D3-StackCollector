@@ -87,6 +87,8 @@ class LSPClient:
         """Send a JSON-RPC message"""
         body = json.dumps(payload).encode()
 
+        print('>>>', payload, flush=True)
+
         header = (
             f"Content-Length: {len(body)}\r\n\r\n"
         ).encode()
@@ -120,6 +122,8 @@ class LSPClient:
 
             if "error" in response:
                 raise RuntimeError(response["error"])
+            
+            print('<<<', response["result"], flush=True)
 
             return response["result"]
 

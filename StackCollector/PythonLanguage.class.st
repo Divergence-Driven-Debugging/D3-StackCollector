@@ -43,13 +43,14 @@ PythonLanguage class >> createClientFor: aPath atPort: aNumber [
 
 { #category : 'testing' }
 PythonLanguage class >> isAssignmentNode: aNode [
-	"Answer wether aNode an assignment for the target language."
+	"Answer whether or not aNode an assignment for the target language."
 
 	^ #( 'assignment' 'augmented_assignment' ) includes: aNode type
 ]
 
 { #category : 'testing' }
 PythonLanguage class >> isTerminalTargetNode: aNode [
+	"Answer whether or not aNode an assignment for the target language."
 
 	^ #( 'identifier' 'attribute' 'subscript' ) includes: aNode type
 ]

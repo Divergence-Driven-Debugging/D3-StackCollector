@@ -56,7 +56,7 @@ JavaLanguage class >> createClientFor: aPath atPort: aNumber [
 
 { #category : 'testing' }
 JavaLanguage class >> isAssignmentNode: aNode [
-	"Answer wether aNode an assignment for the target language."
+	"Answer whether or not aNode an assignment for the target language."
 
 	^ #( 'assignment_expression' 'variable_declarator' ) includes:
 		  aNode type
@@ -64,6 +64,7 @@ JavaLanguage class >> isAssignmentNode: aNode [
 
 { #category : 'testing' }
 JavaLanguage class >> isTerminalTargetNode: aNode [
+	"Answer whether or not aNode an assignment for the target language."
 
 	^ #( 'identifier' 'field_access' 'array_access' ) includes:
 		  aNode type

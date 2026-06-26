@@ -1,3 +1,15 @@
+"
+I represent the JS language within the trace collection framework.
+
+I implement the language-specific services required by SupportedLanguage
+by:
+- launching a js debug adapter,
+- creating a DAP client configured with the JS backend,
+- preparing the execution of a JS project for trace collection.
+
+This class is used by TraceCollector to obtain
+execution traces from js programs.
+"
 Class {
 	#name : 'JSLanguage',
 	#superclass : 'SupportedLanguage',
@@ -24,7 +36,7 @@ JSLanguage class >> assignmentTargetNodeFor: aNode [
 
 { #category : 'testing' }
 JSLanguage class >> isAssignmentNode: aNode [
-	"Answer wether aNode an assignment for the target language."
+	"Answer whether or not aNode an assignment for the target language."
 
 	^ #( 'assignment_expression' 'augmented_assignment_expression'
 	     'variable_declarator' ) includes: aNode type
@@ -32,6 +44,7 @@ JSLanguage class >> isAssignmentNode: aNode [
 
 { #category : 'testing' }
 JSLanguage class >> isTerminalTargetNode: aNode [
+	"Answer whether or not aNode an assignment for the target language."
 
 	^ #( 'identifier' 'member_expression' 'subscript_expression'
 	     'shorthand_property_identifier_pattern' ) includes: aNode type

@@ -35,13 +35,14 @@ SupportedLanguage class >> createClientFor: aPath atPort: aNumber [
 
 { #category : 'testing' }
 SupportedLanguage class >> isAssignmentNode: aNode [
-	"Answer wether aNode an assignment for the target language."
+	"Answer whether or not aNode an assignment for the target language."
 
 	^ self subclassResponsibility
 ]
 
 { #category : 'testing' }
 SupportedLanguage class >> isTerminalTargetNode: aNode [
+	"Answer whether or not aNode an assignment for the target language."
 
 	^ self subclassResponsibility
 ]

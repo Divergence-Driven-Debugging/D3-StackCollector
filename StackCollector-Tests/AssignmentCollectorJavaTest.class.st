@@ -56,6 +56,12 @@ AssignmentCollectorJavaTest class >> testParameters [
 		  addCase: {
 				  (#line -> 'for(int i = 0; i < 10; i ++)').
 				  (#expectedResult -> #( 'i' )) };
+		  addCase: {
+				  (#line -> 'Map<String, Integer> map = new HashMap<>();').
+				  (#expectedResult -> #( 'map' )) };
+		  addCase: {
+				  (#line -> 'this.x = this.y = 1;').
+				  (#expectedResult -> #( 'this.x' 'this.y' )) };
 		  yourself
 ]
 

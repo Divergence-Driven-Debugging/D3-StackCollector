@@ -18,13 +18,6 @@ Class {
 }
 
 { #category : 'accessing' }
-JavaLanguage class >> assignmentNodeTypes [
-	"Answer the collection of AST node types that represent assignment for the target language."
-
-	^ #( 'assignment_expression' 'variable_declarator' )
-]
-
-{ #category : 'accessing' }
 JavaLanguage class >> assignmentTargetNodeFor: aNode [
 	"Answer the AST node corresponding to the assignment target of the given assignment node.
 	Answer nil if the assignment node has no target."
@@ -61,6 +54,21 @@ JavaLanguage class >> createClientFor: aPath atPort: aNumber [
 		  startClientSession
 ]
 
+{ #category : 'testing' }
+JavaLanguage class >> isAssignmentNode: aNode [
+	"Answer wether aNode an assignment for the target language."
+
+	^ #( 'assignment_expression' 'variable_declarator' ) includes:
+		  aNode type
+]
+
+{ #category : 'testing' }
+JavaLanguage class >> isTerminalTargetNode: aNode [
+
+	^ #( 'identifier' 'field_access' 'array_access' ) includes:
+		  aNode type
+]
+
 { #category : 'accessing' }
 JavaLanguage class >> languageToParse [
 	"Return a TSLanguage"
@@ -80,11 +88,4 @@ JavaLanguage class >> shouldSkipForPath: aPath [
 	"Answer true if aPath should be ignored when collecting traces."
 
 	^ aPath includesSubstring: 'JavaVirtualMachines'
-]
-
-{ #category : 'accessing' }
-JavaLanguage class >> targetNodeTypes [
-	"Answer the collection of AST node types that can be considered valid assignment targets for the target language."
-
-	^ #( 'identifier' 'field_access' 'array_access' )
 ]

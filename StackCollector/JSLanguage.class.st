@@ -49,6 +49,7 @@ JSLanguage class >> createClientFor: aPath atPort: aNumber [
 				  ('stopOnEntry' -> true).
 				  ('type' -> 'pwa-node').
 				  ('skipFiles' -> { '<node_internals>/**' }) } asDictionary;
+		  breakpoint: aPath line: 20;
 		  backend: DAPBackendJavaScript new;
 		  startDebuggingRequest: true;
 		  startClientSession

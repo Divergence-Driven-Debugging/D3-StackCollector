@@ -34,6 +34,26 @@ JSLanguage class >> assignmentTargetNodeFor: aNode [
 	^ nil
 ]
 
+{ #category : 'actions' }
+JSLanguage class >> createClientFor: aPath atPort: aNumber [
+	"Create a DAP client configured to debug the source located at aPath
+	through the adapter listening on aNumber."
+
+	^ DAPClientBuilder newSindarinClient
+		  port: aNumber;
+		  adapterID: 'node';
+		  arguments: {
+				  ('program' -> aPath).
+				  ('request' -> 'launch').
+				  ('justMyCode' -> false).
+				  ('stopOnEntry' -> true).
+				  ('type' -> 'pwa-node').
+				  ('skipFiles' -> { '<node_internals>/**' }) } asDictionary;
+		  backend: DAPBackendJavaScript new;
+		  startDebuggingRequest: true;
+		  startClientSession
+]
+
 { #category : 'testing' }
 JSLanguage class >> isAssignmentNode: aNode [
 	"Answer whether or not aNode an assignment for the target language."
@@ -55,4 +75,18 @@ JSLanguage class >> languageToParse [
 	"Return the target language, a TSLanguage"
 
 	^ TSLanguage typescript
+]
+
+{ #category : 'actions' }
+JSLanguage class >> launchAdapterAtPort: aNumber [
+	"Start the language-specific DAP adapter configured to accept connections on port aNumber"
+
+	^ AdapterLauncher launchJSAdapterAtPort: aNumber
+]
+
+{ #category : 'asserting' }
+JSLanguage class >> shouldSkipForPath: aPath [
+	"Answer true if aPath should be ignored when collecting traces."
+
+	^ false
 ]

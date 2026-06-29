@@ -45,7 +45,7 @@ def startJava(port: int, project_directory: str):
     ])
     
 def startJs(port: int):
-    dapDebugServer = "/Users/flavienvolant/Documents/sindarin-dap/js/js-debug/src/dapDebugServer.js"
+    dapDebugServer = Path(os.getenv("JS_DEBUG"))
     print('run', 'node', '--dns-result-order=ipv4first', dapDebugServer, port, flush=True)
     run(['node', '--dns-result-order=ipv4first', dapDebugServer, port])
 

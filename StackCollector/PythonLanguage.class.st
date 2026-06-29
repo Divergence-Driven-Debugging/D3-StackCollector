@@ -26,8 +26,8 @@ PythonLanguage class >> assignmentTargetNodeFor: aNode [
 ]
 
 { #category : 'actions' }
-PythonLanguage class >> createClientFor: aPath atPort: aNumber [
-	"Create a DAP client configured to debug the source located at aPath
+PythonLanguage class >> createClientForProject: aProjectPath withEntryPoint: aFilePath atPort: aNumber [
+	"Create a DAP client configured to debug the source located at aProjectPath with entry point at aFilePath
 	through the adapter listening on aNumber."
 
 	^ DAPClientBuilder newSindarinClient
@@ -35,7 +35,7 @@ PythonLanguage class >> createClientFor: aPath atPort: aNumber [
 		  adapterID: 'python';
 		  functionBreakpoint: 'main';
 		  arguments: {
-				  ('program' -> aPath).
+				  ('program' -> aFilePath).
 				  ('justMyCode' -> false) } asDictionary;
 		  backend: DAPBackendPython new;
 		  startClientSession

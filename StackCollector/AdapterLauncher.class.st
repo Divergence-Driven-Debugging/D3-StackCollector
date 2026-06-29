@@ -14,7 +14,8 @@ AdapterLauncher class >> launchJSAdapterAtPort: aNumber onProject: aProjectPath 
 
 	OSPlatform current runCommand:
 		'nohup .env/bin/python3 pharo-local/iceberg/Divergence-Driven-Debugging/D3-StackCollector/scripts/setup.py js '
-		, aNumber asString , aProjectPath , ' > /tmp/debugpy.log 2>&1 &'
+		, aNumber asString , ' ' , aProjectPath
+		, ' > /tmp/debugpy.log 2>&1 &'
 ]
 
 { #category : 'api' }
@@ -23,7 +24,8 @@ AdapterLauncher class >> launchJavaAdapterAtPort: aNumber onProject: aProjectPat
 
 	OSPlatform current runCommand:
 		'nohup .env/bin/python3 pharo-local/iceberg/Divergence-Driven-Debugging/D3-StackCollector/scripts/setup.py java '
-		, aNumber asString , aProjectPath , ' > /tmp/debugpy.log 2>&1 &'
+		, aNumber asString , ' ' , aProjectPath
+		, ' > /tmp/debugpy.log 2>&1 &'
 ]
 
 { #category : 'api' }
@@ -31,6 +33,7 @@ AdapterLauncher class >> launchPythonAdapterAtPort: aNumber onProject: aProjectP
 	"Launch the python adapter"
 
 	OSPlatform current runCommand:
-		'nohup .env/bin/python3 pharo-local/iceberg/Divergence-Driven-Debugging/D3-StackCollector/scripts/setup.py py '
-		, aNumber asString , aProjectPath , ' > /tmp/debugpy.log 2>&1 &'
+		'nohup venv/bin/python3 pharo-local/iceberg/Divergence-Driven-Debugging/D3-StackCollector/scripts/setup.py py '
+		, aNumber asString , ' ' , aProjectPath
+		, ' > /tmp/debugpy.log 2>&1 &'
 ]

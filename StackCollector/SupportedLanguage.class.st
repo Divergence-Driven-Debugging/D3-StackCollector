@@ -24,8 +24,8 @@ SupportedLanguage class >> assignmentTargetNodeFor: aNode [
 ]
 
 { #category : 'actions' }
-SupportedLanguage class >> createClientFor: aPath atPort: aNumber [
-	"Create a DAP client configured to debug the source located at aPath
+SupportedLanguage class >> createClientForProject: aProjectPath withEntryPoint: aFilePath atPort: aNumber [
+	"Create a DAP client configured to debug the source located at aProjectPath with entry point at aFilePath
 	through the adapter listening on aNumber.
 
 	Subclasses must provide a language-specific implementation."

@@ -47,12 +47,15 @@ TraceCollector >> collectFor: aSupportedLanguage onProject: aProjectPath withEnt
 	is closed when the operation is finished."
 
 	| clientDAP |
-	aSupportedLanguage launchAdapterAtPort: self port.
+	aSupportedLanguage
+		launchAdapterAtPort: self port
+		onProject: aProjectPath.
 
 	1 seconds asDuration wait.
 
 	clientDAP := aSupportedLanguage
-		             createClientFor: aFilePath
+		             createClientForProject: aProjectPath
+		             withEntryPoint: aFilePath
 		             atPort: self port.
 
 	1 seconds asDuration wait.

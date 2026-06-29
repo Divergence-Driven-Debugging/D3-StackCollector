@@ -13,7 +13,7 @@ AdapterLauncher class >> launchJSAdapterAtPort: aNumber onProject: aProjectPath 
 	"Launch the java adapter"
 
 	OSPlatform current runCommand:
-		'nohup .env/bin/python3 pharo-local/iceberg/Divergence-Driven-Debugging/D3-StackCollector/scripts/setup.py js '
+		'nohup venv/bin/python3 pharo-local/iceberg/Divergence-Driven-Debugging/D3-StackCollector/scripts/setup.py js '
 		, aNumber asString , ' ' , aProjectPath
 		, ' > /tmp/debugpy.log 2>&1 &'
 ]
@@ -23,7 +23,7 @@ AdapterLauncher class >> launchJavaAdapterAtPort: aNumber onProject: aProjectPat
 	"Launch the java adapter"
 
 	OSPlatform current runCommand:
-		'nohup .env/bin/python3 pharo-local/iceberg/Divergence-Driven-Debugging/D3-StackCollector/scripts/setup.py java '
+		'nohup venv/bin/python3 pharo-local/iceberg/Divergence-Driven-Debugging/D3-StackCollector/scripts/setup.py java '
 		, aNumber asString , ' ' , aProjectPath
 		, ' > /tmp/debugpy.log 2>&1 &'
 ]

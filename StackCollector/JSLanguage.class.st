@@ -79,10 +79,10 @@ JSLanguage class >> languageToParse [
 ]
 
 { #category : 'actions' }
-JSLanguage class >> launchAdapterAtPort: aNumber [
-	"Start the language-specific DAP adapter configured to accept connections on port aNumber"
+JSLanguage class >> launchAdapterAtPort: aNumber onProject: aProjectPath [
+	"Start the language-specific DAP adapter configured to accept connections at port aNumber and on project at aProjectPath"
 
-	^ AdapterLauncher launchJSAdapterAtPort: aNumber
+	^ AdapterLauncher launchJSAdapterAtPort: aNumber onProject: aProjectPath 
 ]
 
 { #category : 'asserting' }

@@ -78,10 +78,10 @@ JavaLanguage class >> languageToParse [
 ]
 
 { #category : 'actions' }
-JavaLanguage class >> launchAdapterAtPort: aNumber [
-	"Start the java adapter configured to accept connections on port aNumber."
+JavaLanguage class >> launchAdapterAtPort: aNumber onProject: aProjectPath [
+	"Start the java adapter configured to accept connections at port aNumber and on project at aProjectPath"
 
-	AdapterLauncher launchJavaAdapterAtPort: aNumber
+	AdapterLauncher launchJavaAdapterAtPort: aNumber onProject: aProjectPath 
 ]
 
 { #category : 'asserting' }

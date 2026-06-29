@@ -63,10 +63,10 @@ PythonLanguage class >> languageToParse [
 ]
 
 { #category : 'actions' }
-PythonLanguage class >> launchAdapterAtPort: aNumber [
-	"Start the python adapter configured to accept connections on port aNumber."
+PythonLanguage class >> launchAdapterAtPort: aNumber onProject: aProjectPath [
+	"Start the python adapter configured to accept connections at port aNumber and on project at aProjectPath."
 
-	AdapterLauncher launchPythonAdapterAtPort: aNumber
+	AdapterLauncher launchPythonAdapterAtPort: aNumber onProject: aProjectPath 
 ]
 
 { #category : 'asserting' }

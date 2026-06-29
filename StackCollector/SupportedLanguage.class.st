@@ -55,8 +55,8 @@ SupportedLanguage class >> languageToParse [
 ]
 
 { #category : 'actions' }
-SupportedLanguage class >> launchAdapterAtPort: aNumber [
-	"Start the language-specific DAP adapter configured to accept connections on port aNumber.
+SupportedLanguage class >> launchAdapterAtPort: aNumber onProject: aProjectPath [
+	"Start the language-specific DAP adapter configured to accept connections at port aNumber and on project at aProjectPath.
 
 	Subclasses must implement the adapter startup procedure."
 

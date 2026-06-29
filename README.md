@@ -22,7 +22,7 @@ From the root directory of your Pharo image, create a virtual environment named 
 ```Bash
 python3 -m venv venv
 source venv/bin/activate
-pip install debugpy
+pip install -r pharo-local/iceberg/Divergence-Driven-Debugging/D3-StackCollector/requirements.txt
 ```
 
 The trace collector expects the following structure:
@@ -34,6 +34,14 @@ The trace collector expects the following structure:
 ├── Pharo.image
 └── pharo-local/
 ```
+
+## Setup external tools
+
+You also have to install external tools for other langages (Java, JavaScript, ...) and add their path to the `.env` file:
+
+- [java-debug](https://github.com/microsoft/java-debug) adapter from Microsoft (`JAVA_DEBUG` in `.env`);
+- [java language serveur](https://github.com/eclipse-jdtls/eclipse.jdt.ls) (`JDTLS` in `.emv`);
+- [vscode-js-debug](https://github.com/microsoft/vscode-js-debug) (`JS_DEBUG` in `.env`).
 
 ## Usage 
 

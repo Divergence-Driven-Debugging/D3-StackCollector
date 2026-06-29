@@ -9,6 +9,15 @@ Class {
 }
 
 { #category : 'api' }
+AdapterLauncher class >> launchJSAdapterAtPort: aNumber [
+	"Launch the java adapter"
+
+	OSPlatform current runCommand:
+		'nohup .env/bin/python3 pharo-local/iceberg/Divergence-Driven-Debugging/D3-StackCollector/scripts/setup.py js '
+		, aNumber asString , ' > /tmp/debugpy.log 2>&1 &'
+]
+
+{ #category : 'api' }
 AdapterLauncher class >> launchJavaAdapterAtPort: aNumber [
 	"Launch the java adapter"
 

@@ -14,40 +14,32 @@ Class {
 }
 
 { #category : 'private - accessing' }
-AssignmentCollector >> collectAssignmentTargetsFrom: aNode source: source into: assignments [
-	"Recursively collect assignment targets from the left-hand
-	side of an assignment expression."
-
-	(supportedLanguage targetNodeTypes includes: aNode type) ifTrue: [
-			assignments add: (aNode textFromSourceText: source).
-			^ self ].
-
-	"Traverse child nodes to find nested targets."
-	aNode namedChildren do: [ :child |
-			self
-				collectAssignmentTargetsFrom: child
-				source: source
-				into: assignments ]
-]
-
-{ #category : 'private - accessing' }
 AssignmentCollector >> collectAssignmentsFrom: aNode source: source into: assignments [
 	"Recursively traverse the AST and collect assignment targets
 	from assignment and augmented assignment nodes."
 
-	(supportedLanguage assignmentNodeTypes includes: aNode type) ifTrue: [
+	(supportedLanguage isAssignmentNode: aNode) ifTrue: [
 			| target |
 			target := supportedLanguage assignmentTargetNodeFor: aNode.
 
 			target ifNotNil: [
-					self
-						collectAssignmentTargetsFrom: target
-						source: source
-						into: assignments ] ].
+				self collectTargetsFrom: target source: source into: assignments ] ].
 
 	"Continue traversal on child nodes."
 	aNode namedChildren do: [ :child |
 		self collectAssignmentsFrom: child source: source into: assignments ]
+]
+
+{ #category : 'private - accessing' }
+AssignmentCollector >> collectTargetsFrom: aNode source: source into: assignments [
+	"Recursively collect assignment targets from the left-hand	side of an assignment expression."
+
+	(supportedLanguage isTerminalTargetNode: aNode) ifTrue: [
+			assignments add: (aNode textFromSourceText: source).
+			^ self ].
+
+	aNode namedChildren do: [ :child |
+		self collectTargetsFrom: child source: source into: assignments ]
 ]
 
 { #category : 'accessing' }

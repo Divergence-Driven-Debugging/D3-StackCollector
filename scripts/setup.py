@@ -31,7 +31,7 @@ def startJava(port: int, project_directory: str):
     jdtls = JDTLS(client, [str(java_debug_jar)])
 
     print("\nLSP Initialize", flush=True)
-    jdtls.initialize(project_directory)
+    jdtls.initialize(Path(project_directory))
 
     print("\nLSP startDebugSession", flush=True)
     adapter_port = jdtls.execute_command("vscode.java.startDebugSession")
@@ -64,4 +64,5 @@ def main(argv: list[str]):
 
 
 if __name__ == "__main__":
+    load_dotenv()
     main(sys.argv)

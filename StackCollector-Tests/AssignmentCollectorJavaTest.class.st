@@ -78,13 +78,6 @@ AssignmentCollectorJavaTest >> expectedResult: aCollection [
 ]
 
 { #category : 'accessing' }
-AssignmentCollectorJavaTest >> initialize [
-	"We ensure the installation of the library before running the tests because it could cause a time limit to fails for the test installing the libraries."
-
-	TSLibrariesJava new ensureJavaLibraryExists
-]
-
-{ #category : 'accessing' }
 AssignmentCollectorJavaTest >> line [
 	
 	^ line

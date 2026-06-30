@@ -51,7 +51,7 @@ TraceCollector >> collectFor: aSupportedLanguage onProject: aProjectPath withEnt
 		launchAdapterAtPort: self port
 		onProject: aProjectPath.
 
-	1 seconds asDuration wait.
+	2 seconds asDuration wait.
 
 	clientDAP := aSupportedLanguage
 		             createClientForProject: aProjectPath

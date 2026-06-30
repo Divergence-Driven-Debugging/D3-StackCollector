@@ -26,30 +26,36 @@ Class {
 }
 
 { #category : 'collect' }
-TraceCollector >> collectFor: aSupportedLanguage path: aPath [
-	"Collect the execution trace of the program located at
-	aPath using aSupportedLanguage, including assignment operations."
+TraceCollector >> collectFor: aSupportedLanguage onProject: aProjectPath withEntryPoint: aFilePath [
+	"Collect the execution trace of the program located at aProjectPath with entry point at aFilePath using aSupportedLanguage, including assignment operations."
 
-	^ self collectFor: aSupportedLanguage path: aPath using: [ :client |
-			  (DAPTraceCollector
-				   collectStackFrom: client
-				   for: aSupportedLanguage) asArray ]
+	^ self
+		  collectFor: aSupportedLanguage
+		  onProject: aProjectPath
+		  withEntryPoint: aFilePath
+		  using: [ :client |
+				  (DAPTraceCollector
+					   collectStackFrom: client
+					   for: aSupportedLanguage) asArray ]
 ]
 
 { #category : 'private' }
-TraceCollector >> collectFor: aSupportedLanguage path: aPath using: aBlock [
+TraceCollector >> collectFor: aSupportedLanguage onProject: aProjectPath withEntryPoint: aFilePath using: aBlock [
 	"Start the DAP adapter for aSupportedLanguage and create a
-	DAP client for the program located at aPath. Evaluate aBlock,
-	passing the client as argument, and ensure that the connection
+	DAP client for the program located at aProjectPath with entry point at aFilePath. 
+	Evaluate aBlock, passing the client as argument, and ensure that the connection
 	is closed when the operation is finished."
 
 	| clientDAP |
-	aSupportedLanguage launchAdapterAtPort: self port.
+	aSupportedLanguage
+		launchAdapterAtPort: self port
+		onProject: aProjectPath.
 
 	1 seconds asDuration wait.
 
 	clientDAP := aSupportedLanguage
-		             createClientFor: aPath
+		             createClientForProject: aProjectPath
+		             withEntryPoint: aFilePath
 		             atPort: self port.
 
 	1 seconds asDuration wait.
@@ -58,14 +64,18 @@ TraceCollector >> collectFor: aSupportedLanguage path: aPath using: aBlock [
 ]
 
 { #category : 'collect' }
-TraceCollector >> collectWithoutAssignmentFor: aSupportedLanguage path: aPath [
-	"Collect the execution trace of the program located at
-	aPath using aSupportedLanguage, excluding assignment operations."
+TraceCollector >> collectWithoutAssignmentFor: aSupportedLanguage onProject: aProjectPath withEntryPoint: aFilePath [
+	"Collect the execution trace of the program located at aProjectPath with entry point at aFilePath
+	using aSupportedLanguage, excluding assignment operations."
 
-	^ self collectFor: aSupportedLanguage path: aPath using: [ :client |
-			  (DAPTraceCollector
-				   collectStackWithoutAssignmentsFrom: client
-				   for: aSupportedLanguage) asArray ]
+	^ self
+		  collectFor: aSupportedLanguage
+		  onProject: aProjectPath
+		  withEntryPoint: aFilePath
+		  using: [ :client |
+				  (DAPTraceCollector
+					   collectStackWithoutAssignmentsFrom: client
+					   for: aSupportedLanguage) asArray ]
 ]
 
 { #category : 'accessing' }

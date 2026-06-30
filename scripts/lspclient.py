@@ -5,14 +5,13 @@ from subprocess import Popen
 
 
 class LSPClient:
-
     """
     Minimal Language Server Protocol (LSP) client.
 
     Handles JSON-RPC communication with a language server process
     over stdin/stdout.
     """
-    
+
     def __init__(self, process: Popen):
         """Create a client connected to a language server process."""
         self.process = process
@@ -22,10 +21,7 @@ class LSPClient:
 
         self._response_queues: dict[int, queue.Queue] = {}
 
-        self._reader_thread = threading.Thread(
-            target=self._reader_loop,
-            daemon=True
-        )
+        self._reader_thread = threading.Thread(target=self._reader_loop, daemon=True)
         self._reader_thread.start()
 
     def _read_exact(self, size: int) -> bytes | None:
@@ -75,9 +71,7 @@ class LSPClient:
             message = json.loads(body.decode())
 
             # Handle request responses
-            if "id" in message and (
-                "result" in message or "error" in message
-            ):
+            if "id" in message and ("result" in message or "error" in message):
                 response_queue = self._response_queues.get(message["id"])
 
                 if response_queue:
@@ -85,6 +79,7 @@ class LSPClient:
 
     def _send(self, payload: dict):
         """Send a JSON-RPC message"""
+
         body = json.dumps(payload).encode()
 
         print('>>>', payload, flush=True)
@@ -96,26 +91,24 @@ class LSPClient:
         self.process.stdin.write(header)
         self.process.stdin.write(body)
         self.process.stdin.flush()
-    
-    def request(
-        self,
-        method: str,
-        params: dict,
-        timeout: float = 30.0
-    ):
+
+    def request(self, method: str, params: dict, timeout: float = 30.0):
         """Send a request and wait for the response"""
+
         request_id = self._next_id
         self._next_id += 1
 
         response_queue = queue.Queue(maxsize=1)
         self._response_queues[request_id] = response_queue
 
-        self._send({
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "method": method,
-            "params": params,
-        })
+        self._send(
+            {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "method": method,
+                "params": params,
+            }
+        )
 
         try:
             response = response_queue.get(timeout=timeout)
@@ -130,18 +123,18 @@ class LSPClient:
         finally:
             self._response_queues.pop(request_id, None)
 
-    def notify(
-        self,
-        method: str,
-        params: dict
-    ):
+    def notify(self, method: str, params: dict):
         """Send a notification"""
-        self._send({
-            "jsonrpc": "2.0",
-            "method": method,
-            "params": params,
-        })
+
+        self._send(
+            {
+                "jsonrpc": "2.0",
+                "method": method,
+                "params": params,
+            }
+        )
 
     def close(self):
         """Stop processing incoming messages."""
+
         self._running = False

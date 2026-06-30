@@ -32,8 +32,8 @@ JavaLanguage class >> assignmentTargetNodeFor: aNode [
 ]
 
 { #category : 'actions' }
-JavaLanguage class >> createClientFor: aPath atPort: aNumber [
-	"Create a DAP client configured to debug the source located at aPath
+JavaLanguage class >> createClientForProject: aProjectPath withEntryPoint: aFilePath atPort: aNumber [
+	"Create a DAP client configured to debug the source located at aProjectPath with entry point at aFilePath
 	through the adapter listening on aNumber."
 
 	^ DAPClientBuilder newSindarinClient
@@ -43,12 +43,8 @@ JavaLanguage class >> createClientFor: aPath atPort: aNumber [
 		  arguments: {
 				  ('console' -> 'internalConsole').
 				  ('mainClass' -> 'example.Main').
-				  ('classPaths'
-				   ->
-					   { '/Users/flavienvolant/Documents/sindarin-dap/java/target/classes' }).
-				  ('sourcePaths'
-				   ->
-					   { '/Users/flavienvolant/Documents/sindarin-dap/java/src/main/java' }).
+				  ('classPaths' -> { (aProjectPath , '/target/classes') }).
+				  ('sourcePaths' -> { (aProjectPath , '/src/main/java') }).
 				  ('justMyCode' -> true) } asDictionary;
 		  backend: DAPBackendJava new;
 		  startClientSession
@@ -78,10 +74,10 @@ JavaLanguage class >> languageToParse [
 ]
 
 { #category : 'actions' }
-JavaLanguage class >> launchAdapterAtPort: aNumber [
-	"Start the java adapter configured to accept connections on port aNumber."
+JavaLanguage class >> launchAdapterAtPort: aNumber onProject: aProjectPath [
+	"Start the java adapter configured to accept connections at port aNumber and on project at aProjectPath"
 
-	AdapterLauncher launchJavaAdapterAtPort: aNumber
+	AdapterLauncher launchJavaAdapterAtPort: aNumber onProject: aProjectPath 
 ]
 
 { #category : 'asserting' }

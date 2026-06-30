@@ -35,21 +35,21 @@ JSLanguage class >> assignmentTargetNodeFor: aNode [
 ]
 
 { #category : 'actions' }
-JSLanguage class >> createClientFor: aPath atPort: aNumber [
-	"Create a DAP client configured to debug the source located at aPath
+JSLanguage class >> createClientForProject: aProjectPath withEntryPoint: aFilePath atPort: aNumber [
+	"Create a DAP client configured to debug the source located at aProjectPath with entry point at aFilePath
 	through the adapter listening on aNumber."
 
 	^ DAPClientBuilder newSindarinClient
 		  port: aNumber;
 		  adapterID: 'node';
 		  arguments: {
-				  ('program' -> aPath).
+				  ('program' -> aFilePath).
 				  ('request' -> 'launch').
 				  ('justMyCode' -> false).
 				  ('stopOnEntry' -> true).
 				  ('type' -> 'pwa-node').
 				  ('skipFiles' -> { '<node_internals>/**' }) } asDictionary;
-		  breakpoint: aPath line: 20;
+		  breakpoint: aFilePath line: 20;
 		  backend: DAPBackendJavaScript new;
 		  startDebuggingRequest: true;
 		  startClientSession
@@ -79,10 +79,10 @@ JSLanguage class >> languageToParse [
 ]
 
 { #category : 'actions' }
-JSLanguage class >> launchAdapterAtPort: aNumber [
-	"Start the language-specific DAP adapter configured to accept connections on port aNumber"
+JSLanguage class >> launchAdapterAtPort: aNumber onProject: aProjectPath [
+	"Start the language-specific DAP adapter configured to accept connections at port aNumber and on project at aProjectPath"
 
-	^ AdapterLauncher launchJSAdapterAtPort: aNumber
+	^ AdapterLauncher launchJSAdapterAtPort: aNumber onProject: aProjectPath 
 ]
 
 { #category : 'asserting' }

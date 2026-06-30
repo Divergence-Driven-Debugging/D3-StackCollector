@@ -86,13 +86,6 @@ AssignmentCollectorJSTest >> expectedResult: aCollection [
 	expectedResult := aCollection
 ]
 
-{ #category : 'initialization' }
-AssignmentCollectorJSTest >> initialize [
-	"We ensure the installation of the library before running the tests because it could cause a time limit to fails for the test installing the libraries."
-
-	TSLibrariesTypescript new ensureTypescriptLibraryExists
-]
-
 { #category : 'accessing' }
 AssignmentCollectorJSTest >> line [
 	

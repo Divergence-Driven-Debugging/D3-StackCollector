@@ -1,7 +1,6 @@
 import json
 import queue
 import threading
-from subprocess import Popen
 
 
 class LSPClient:
@@ -12,19 +11,19 @@ class LSPClient:
     over stdin/stdout.
     """
 
-    def __init__(self, process: Popen):
+    def __init__(self, process):
         """Create a client connected to a language server process."""
         self.process = process
 
         self._next_id = 1
         self._running = True
 
-        self._response_queues: dict[int, queue.Queue] = {}
+        self._response_queues = {}
 
         self._reader_thread = threading.Thread(target=self._reader_loop, daemon=True)
         self._reader_thread.start()
 
-    def _read_exact(self, size: int) -> bytes | None:
+    def _read_exact(self, size):
         """Read exactly size bytes from stdout"""
 
         data = b""
@@ -77,7 +76,7 @@ class LSPClient:
                 if response_queue:
                     response_queue.put(message)
 
-    def _send(self, payload: dict):
+    def _send(self, payload):
         """Send a JSON-RPC message"""
 
         body = json.dumps(payload).encode()
@@ -92,7 +91,7 @@ class LSPClient:
         self.process.stdin.write(body)
         self.process.stdin.flush()
 
-    def request(self, method: str, params: dict, timeout: float = 30.0):
+    def request(self, method, params, timeout = 30.0):
         """Send a request and wait for the response"""
 
         request_id = self._next_id
@@ -123,7 +122,7 @@ class LSPClient:
         finally:
             self._response_queues.pop(request_id, None)
 
-    def notify(self, method: str, params: dict):
+    def notify(self, method, params):
         """Send a notification"""
 
         self._send(

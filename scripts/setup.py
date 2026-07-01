@@ -8,11 +8,11 @@ from jdtls import JDTLS
 from lspclient import LSPClient
 
 
-def startPy(port: int, project_directory: str):
+def startPy(port, project_directory):
     print('run', project_directory + '/venv/bin/debugpy-adapter', '--port', port, flush=True)
     run([project_directory + '/venv/bin/debugpy-adapter', '--port', port])
 
-def startJava(port: int, project_directory: str):
+def startJava(port, project_directory):
     """Starts the java adapter on `port` and the java LSP"""
 
     java_debug_jar = Path(os.getenv("JAVA_DEBUG"))
@@ -44,13 +44,13 @@ def startJava(port: int, project_directory: str):
         f"TCP:127.0.0.1:{adapter_port}"
     ])
     
-def startJs(port: int):
+def startJs(port):
     dapDebugServer = Path(os.getenv("JS_DEBUG"))
     print('run', 'node', '--dns-result-order=ipv4first', dapDebugServer, port, flush=True)
     run(['node', '--dns-result-order=ipv4first', dapDebugServer, port])
 
 
-def main(argv: list[str]):
+def main(argv):
     """Script must be executed with `python setup.py [language] [port] [project_directory]`"""
 
     language, port, project_directory = argv[1], argv[2], argv[3]

@@ -1,7 +1,5 @@
 from pathlib import Path
 
-from lspclient import LSPClient
-
 
 class JDTLS:
     """
@@ -11,12 +9,12 @@ class JDTLS:
     command execution.
     """
 
-    def __init__(self, client: LSPClient, bundles: list[str]):
+    def __init__(self, client, bundles):
         """Create a JDTLS wrapper using the given LSP client."""
         self.client = client
         self.bundles = bundles
 
-    def initialize(self, project_dir: Path):
+    def initialize(self, project_dir):
         """Initialize JDTLS for the specified project directory."""
 
         root_uri = project_dir.as_uri()
@@ -34,7 +32,7 @@ class JDTLS:
 
         self.client.notify("initialized", {})
 
-    def execute_command(self, command: str):
+    def execute_command(self, command):
         """Execute a JDTLS workspace command."""
 
         return self.client.request(

@@ -36,7 +36,8 @@ TraceCollector >> collectFor: aSupportedLanguage onProject: aProjectPath withEnt
 		  using: [ :client |
 				  (DAPTraceCollector
 					   collectStackFrom: client
-					   for: aSupportedLanguage) asArray ]
+					   for: aSupportedLanguage
+					   project: aProjectPath) asArray ]
 ]
 
 { #category : 'private' }
@@ -75,7 +76,8 @@ TraceCollector >> collectWithoutAssignmentFor: aSupportedLanguage onProject: aPr
 		  using: [ :client |
 				  (DAPTraceCollector
 					   collectStackWithoutAssignmentsFrom: client
-					   for: aSupportedLanguage) asArray ]
+					   for: aSupportedLanguage
+					   project: aProjectPath) asArray ]
 ]
 
 { #category : 'accessing' }

@@ -10,32 +10,35 @@ Class {
 		'id',
 		'fileLineCache',
 		'pendingAssignmentsStack',
-		'supportedLanguage'
+		'supportedLanguage',
+		'projectPath'
 	],
 	#category : 'StackCollector',
 	#package : 'StackCollector'
 }
 
 { #category : 'initialization' }
-DAPTraceCollector class >> collectStackFrom: aDAPClient for: aSupportedLanguage [
+DAPTraceCollector class >> collectStackFrom: aDAPClient for: aSupportedLanguage project: aPath [
 	"Collect and return the execution trace from aDAPClient for aSupportedLanguage."
 
 	| collector |
 	collector := self new
 		             clientDap: aDAPClient;
-		             supportedLanguage: aSupportedLanguage.
+		             supportedLanguage: aSupportedLanguage;
+		             projectPath: aPath.
 
 	^ collector getExecutionTraces
 ]
 
 { #category : 'initialization' }
-DAPTraceCollector class >> collectStackWithoutAssignmentsFrom: aDAPClient for: aSupportedLanguage [
+DAPTraceCollector class >> collectStackWithoutAssignmentsFrom: aDAPClient for: aSupportedLanguage project: aPath [
 	"Collect and return the execution trace, without assignments, from aDAPClient for aSupportedLanguage."
 
 	| collector |
 	collector := self new
 		             clientDap: aDAPClient;
-		             supportedLanguage: aSupportedLanguage.
+		             supportedLanguage: aSupportedLanguage;
+		             projectPath: aPath.
 
 	^ collector getExecutionTracesWithoutAssignments
 ]
@@ -109,8 +112,15 @@ DAPTraceCollector >> currentCallTracesAtDepth: aNumber [
 DAPTraceCollector >> executedCodeForFrame: aFrame [
 
 	^ {
-		  ('file' -> (aFrame at: 'source' at: 'path')).
+		  ('file' -> (self formatPath: (aFrame at: 'source' at: 'path'))).
 		  ('line' -> (aFrame at: 'line')) } asDictionary
+]
+
+{ #category : 'helpers' }
+DAPTraceCollector >> formatPath: aString [
+	"Answer aString as path relative to the receiver's projectPath."
+
+	^ (aString asPath relativeToPath: projectPath) fullName
 ]
 
 { #category : 'accessing' }
@@ -277,7 +287,8 @@ DAPTraceCollector >> popPendingAssignment: aStackTrace [
 		              put: topPendingAssignment targetExpression;
 		              at: 'old_value' put: topPendingAssignment oldValue;
 		              at: 'executed_code' put: {
-				              ('file' -> topPendingAssignment filepath).
+				              ('file'
+				               -> (self formatPath: topPendingAssignment filepath)).
 				              ('line' -> topPendingAssignment lineNumber) }
 				              asDictionary;
 		              at: 'depth' put: topPendingAssignment stackDepth;
@@ -331,6 +342,12 @@ DAPTraceCollector >> processCurrentWithoutAssignmentStepInto: traces [
 						self
 							addCallTraceTo: traces
 							depth: (currentFrameBody at: 'totalFrames') ] ]
+]
+
+{ #category : 'accessing' }
+DAPTraceCollector >> projectPath: aPath [
+
+	projectPath := aPath asPath
 ]
 
 { #category : 'helpers' }

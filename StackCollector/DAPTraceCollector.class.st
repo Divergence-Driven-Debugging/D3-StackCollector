@@ -11,7 +11,8 @@ Class {
 		'fileLineCache',
 		'pendingAssignmentsStack',
 		'supportedLanguage',
-		'projectPath'
+		'projectPath',
+		'lastStackDepth'
 	],
 	#category : 'StackCollector',
 	#package : 'StackCollector'
@@ -309,21 +310,23 @@ DAPTraceCollector >> popPendingAssignment: aStackTrace [
 
 { #category : 'helpers' }
 DAPTraceCollector >> processCurrentStepInto: traces [
-	"Process the current step-into event and record call and
-	assignment traces."
+	"Process the current step-into event and record call and assignment traces.
 
-	| hasEnteredNewCall currentFrameBody |
+	 One stackTrace request per step instead of two: the depth returned by
+	 currentFrameBody is compared with the one of the previous step, which is exactly
+	 what hasEnteredNewCall was computing with a second request."
 
-	hasEnteredNewCall := clientDap hasEnteredNewCall.
+	| currentFrameBody depth enteredNewCall |
+
 	currentFrameBody := clientDap currentFrameBody.
+	depth := currentFrameBody at: 'totalFrames'.
+	enteredNewCall := lastStackDepth notNil and: [ lastStackDepth < depth ].
+	lastStackDepth := depth.
 
 	(self shouldSkipFrameBody: currentFrameBody)
 		ifTrue: [ clientDap stepOut ]
 		ifFalse: [
-				hasEnteredNewCall ifTrue: [
-						self
-							addCallTraceTo: traces
-							depth: (currentFrameBody at: 'totalFrames') ].
+				enteredNewCall ifTrue: [ self addCallTraceTo: traces depth: depth ].
 				self addAssignmentTraceFrom: currentFrameBody to: traces ]
 ]
 
@@ -331,17 +334,17 @@ DAPTraceCollector >> processCurrentStepInto: traces [
 DAPTraceCollector >> processCurrentWithoutAssignmentStepInto: traces [
 	"Process the current step-into event and record call traces only, ignoring assignment traces."
 
-	| hasEnteredNewCall currentFrameBody |
-	hasEnteredNewCall := clientDap hasEnteredNewCall.
+	| currentFrameBody depth enteredNewCall |
+
 	currentFrameBody := clientDap currentFrameBody.
+	depth := currentFrameBody at: 'totalFrames'.
+	enteredNewCall := lastStackDepth notNil and: [ lastStackDepth < depth ].
+	lastStackDepth := depth.
 
 	(self shouldSkipFrameBody: currentFrameBody)
 		ifTrue: [ clientDap stepOut ]
 		ifFalse: [
-				hasEnteredNewCall ifTrue: [
-						self
-							addCallTraceTo: traces
-							depth: (currentFrameBody at: 'totalFrames') ] ]
+				enteredNewCall ifTrue: [ self addCallTraceTo: traces depth: depth ] ]
 ]
 
 { #category : 'accessing' }
@@ -414,7 +417,7 @@ DAPTraceCollector >> shouldSkipFrameBody: currentFrameBody [
 
 	path := currentFrame at: 'source' at: 'path' ifAbsent: [ ^ true ].
 
-	^ supportedLanguage shouldSkipForPath: path
+	^ supportedLanguage shouldSkipForPath: path inProject: projectPath fullName
 ]
 
 { #category : 'accessing' }

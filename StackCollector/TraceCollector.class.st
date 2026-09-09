@@ -43,11 +43,14 @@ TraceCollector >> collectFor: aSupportedLanguage onProject: aProjectPath withEnt
 { #category : 'private' }
 TraceCollector >> collectFor: aSupportedLanguage onProject: aProjectPath withEntryPoint: aFilePath using: aBlock [
 	"Start the DAP adapter for aSupportedLanguage and create a
-	DAP client for the program located at aProjectPath with entry point at aFilePath. 
+	DAP client for the program located at aProjectPath with entry point at aFilePath.
 	Evaluate aBlock, passing the client as argument, and ensure that the connection
-	is closed when the operation is finished."
+	is closed and the adapter stopped when the operation is finished."
 
 	| clientDAP |
+	AdapterLauncher stopAdapterAtPort: self port.
+	500 milliSeconds asDuration wait.
+
 	aSupportedLanguage
 		launchAdapterAtPort: self port
 		onProject: aProjectPath.
@@ -61,7 +64,9 @@ TraceCollector >> collectFor: aSupportedLanguage onProject: aProjectPath withEnt
 
 	1 seconds asDuration wait.
 
-	^ [ aBlock value: clientDAP ] ensure: [ clientDAP closeConnection ]
+	^ [ aBlock value: clientDAP ] ensure: [
+		  clientDAP closeConnection.
+		  AdapterLauncher stopAdapterAtPort: self port ]
 ]
 
 { #category : 'collect' }

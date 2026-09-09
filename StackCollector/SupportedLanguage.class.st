@@ -69,3 +69,14 @@ SupportedLanguage class >> shouldSkipForPath: aPath [
 
 	^ self subclassResponsibility
 ]
+
+{ #category : 'asserting' }
+SupportedLanguage class >> shouldSkipForPath: aPath inProject: aProjectPath [
+	"Answer true if the frame whose source file is aPath must be stepped over
+	 instead of stepped into, for a collection running on aProjectPath.
+
+	 Default: ignore the project and answer as the one argument version, so that
+	 languages which do not override this keep their previous behaviour."
+
+	^ self shouldSkipForPath: aPath
+]

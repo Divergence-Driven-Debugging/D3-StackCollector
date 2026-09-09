@@ -27,18 +27,39 @@ PythonLanguage class >> assignmentTargetNodeFor: aNode [
 
 { #category : 'actions' }
 PythonLanguage class >> createClientForProject: aProjectPath withEntryPoint: aFilePath atPort: aNumber [
-	"Create a DAP client configured to debug the source located at aProjectPath with entry point at aFilePath
-	through the adapter listening on aNumber."
 
-	^ DAPClientBuilder newSindarinClient
-		  port: aNumber;
-		  adapterID: 'python';
-		  functionBreakpoint: 'main';
-		  arguments: {
-				  ('program' -> aFilePath).
-				  ('justMyCode' -> false) } asDictionary;
-		  backend: DAPBackendPython new;
-		  startClientSession
+
+	| builder arguments |
+	arguments := Dictionary new
+		             at: 'program' put: aFilePath;
+		             at: 'justMyCode' put: self justMyCode;
+		             yourself.
+
+	builder := DAPClientBuilder newSindarinClient
+		           port: aNumber;
+		           adapterID: 'python';
+		           backend: DAPBackendPython new;
+		           yourself.
+
+	(self entryFunctionNameFor: aFilePath)
+		ifNotNil: [ :functionName | builder functionBreakpoint: functionName ]
+		ifNil: [ arguments at: 'stopOnEntry' put: true ].
+
+	builder arguments: arguments.
+
+	^ builder startClientSession
+]
+
+{ #category : 'accessing' }
+PythonLanguage class >> entryFunctionNameFor: aFilePath [
+
+	| reference |
+	reference := aFilePath asFileReference.
+	reference exists ifFalse: [ ^ nil ].
+
+	^ (reference contents lines anySatisfy: [ :line |
+			   (line beginsWith: 'def main(') or: [
+				   line beginsWith: 'async def main(' ] ]) ifTrue: [ 'main' ]
 ]
 
 { #category : 'testing' }
@@ -53,6 +74,13 @@ PythonLanguage class >> isTerminalTargetNode: aNode [
 	"Answer whether or not aNode an assignment for the target language."
 
 	^ #( 'identifier' 'attribute' 'subscript' ) includes: aNode type
+]
+
+{ #category : 'accessing' }
+PythonLanguage class >> justMyCode [
+
+
+	^ false
 ]
 
 { #category : 'accessing' }
@@ -74,4 +102,33 @@ PythonLanguage class >> shouldSkipForPath: aPath [
 	"Answer true if aPath should be ignored when collecting traces."
 
 	^ aPath includesSubstring: 'runpy.py'
+]
+
+{ #category : 'asserting' }
+PythonLanguage class >> shouldSkipForPath: aPath inProject: aProjectPath [
+
+	| path project |
+	path := aPath asString.
+
+	"runpy is the module launcher of the adapter, never interesting"
+	(path includesSubstring: 'runpy.py') ifTrue: [ ^ true ].
+
+	self traceScope = #everything ifTrue: [ ^ false ].
+
+	"the files of the project itself are always traced"
+	project := aProjectPath asString.
+	((path beginsWith: project) and: [
+		 (path includesSubstring: 'site-packages') not ]) ifTrue: [ ^ false ].
+
+	self traceScope = #project ifTrue: [ ^ true ].
+
+	"#projectAndLibraries: third party packages yes, standard library no"
+	^ (path includesSubstring: 'site-packages') not and: [
+		  (path includesSubstring: 'dist-packages') not ]
+]
+
+{ #category : 'accessing' }
+PythonLanguage class >> traceScope [
+
+	^ #projectAndLibraries
 ]

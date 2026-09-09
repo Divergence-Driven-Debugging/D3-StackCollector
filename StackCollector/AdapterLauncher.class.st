@@ -37,3 +37,11 @@ AdapterLauncher class >> launchPythonAdapterAtPort: aNumber onProject: aProjectP
 		, aNumber asString , ' ' , aProjectPath
 		, ' > /tmp/debugpy.log 2>&1 &'
 ]
+
+{ #category : 'api' }
+AdapterLauncher class >> stopAdapterAtPort: aNumber [
+
+	OSPlatform current runCommand:
+		'lsof -ti tcp:' , aNumber asString
+		, ' -sTCP:LISTEN | while read p; do kill -9 $p; done'
+]
